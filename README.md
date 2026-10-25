@@ -21,3 +21,7 @@ python scripts/check_env.py
 
 ## Status
 - [x] Day 1: project skeleton, environment check
+
+## Repository
+- https://github.com/thinh1598/JSSP/blob/main/README.md
+
