@@ -1,0 +1,10 @@
+python-sat>=1.8.dev13   # PySAT: CaDiCaL, Glucose, MiniSat, ... + encodings
+ortools>=9.10           # CP-SAT baseline
+docplex>=2.25           # CPLEX CP/MIP modelling (needs CPLEX runtime)
+cplex>=22.1             # community edition has size limits
+gurobipy>=11.0          # restricted licence works for small models
+numpy
+pandas
+matplotlib
+psutil                  # peak memory measurement
+pytest
