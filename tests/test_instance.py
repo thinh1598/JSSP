@@ -46,3 +46,17 @@ def test_read_orlib(tmp_path):
     d = read_orlib(f)
     assert set(d) == {"tiny", "tiny2"}
     assert d["tiny"].jobs == [[(0, 3), (1, 2)], [(1, 2), (0, 4)]]
+
+
+def test_read_orlib_skips_invalid(tmp_path):
+    f = tmp_path / "jobshop1.txt"
+    f.write_text(
+        " +++++\n instance ok\n 1 2\n 0 5 1 5\n"
+        " +++++\n instance zero\n 1 2\n 0 0 1 5\n",   # duration 0
+        encoding="utf-8")
+    with pytest.raises(ValueError):
+        read_orlib(f)
+    skipped = {}
+    d = read_orlib(f, skip_invalid=True, skipped=skipped)
+    assert set(d) == {"ok"}
+    assert "zero" in skipped

@@ -78,10 +78,13 @@ def read_instance(path: str | Path) -> JSSPInstance:
     return _build(path.stem, ints)
 
 
-def read_orlib(path: str | Path) -> Dict[str, JSSPInstance]:
+def read_orlib(path: str | Path, skip_invalid: bool = False,
+               skipped: Dict[str, str] | None = None) -> Dict[str, JSSPInstance]:
     """Doc file nhieu bai kieu OR-Library (jobshop1.txt): moi bai bat dau bang dong 'instance <ten>'.
 
     Chi nhan cac dong gom toan so nguyen sau dong tieu de; dong mo ta va dong '+++' bi bo qua.
+    skip_invalid=True: bai nao khong hop le (vd. co thao tac thoi gian 0 nhu orb07) bi bo qua,
+    ten bai va ly do duoc ghi vao dict `skipped` (neu co) thay vi nem loi.
     """
     lines = Path(path).read_text(encoding="utf-8").splitlines()
     starts = [i for i, ln in enumerate(lines) if re.match(r"^\s*instance\s+\S+", ln, re.I)]
@@ -94,5 +97,11 @@ def read_orlib(path: str | Path) -> Dict[str, JSSPInstance]:
             toks = ln.split()
             if toks and all(re.fullmatch(r"-?\d+", t) for t in toks):
                 ints.extend(int(t) for t in toks)
-        result[name] = _build(name, ints)
+        try:
+            result[name] = _build(name, ints)
+        except ValueError as e:
+            if not skip_invalid:
+                raise
+            if skipped is not None:
+                skipped[name] = str(e)
     return result

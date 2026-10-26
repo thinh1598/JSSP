@@ -1,0 +1,17 @@
+instance,lb,ub,status,source
+ft06,55,55,optimal,literature (can doi chieu lai)
+ft10,930,930,optimal,literature (can doi chieu lai)
+ft20,1165,1165,optimal,literature (can doi chieu lai)
+la01,666,666,optimal,literature (can doi chieu lai)
+la02,655,655,optimal,literature (can doi chieu lai)
+la03,597,597,optimal,literature (can doi chieu lai)
+la04,590,590,optimal,literature (can doi chieu lai)
+la05,593,593,optimal,literature (can doi chieu lai)
+abz5,1234,1234,optimal,literature (can doi chieu lai)
+abz6,943,943,optimal,literature (can doi chieu lai)
+abz8,659,665,open_2010,Koshimura et al. 2010 Table 5 (co the da thay doi)
+abz9,678,678,optimal,Koshimura et al. 2010 Table 5
+yn1,884,884,optimal,Koshimura et al. 2010 Table 5
+yn2,893,905,open_2010,Koshimura et al. 2010 Table 5 (co the da thay doi)
+yn3,880,892,open_2010,Koshimura et al. 2010 Table 5 (co the da thay doi)
+yn4,948,968,open_2010,Koshimura et al. 2010 Table 5 (co the da thay doi)
