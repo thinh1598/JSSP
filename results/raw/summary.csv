@@ -1,0 +1,9 @@
+timestamp,instance,n_jobs,n_machines,method,solver,lb_init,lb_source,ub_init,ub_source,lb_final,ub_final,optimal,status,n_calls,total_time,max_peak_mem_mb
+2026-10-28 07:48:05,ft06,6,6,descent,cadical153,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,5,1.29,29.8
+2026-10-28 07:48:06,ft06,6,6,binary,cadical153,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,4,1.05,29.7
+2026-10-28 07:49:56,la01,10,5,descent,cadical153,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,27,21.33,157.4
+2026-10-28 07:50:00,la01,10,5,binary,cadical153,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,6,4.14,152.8
+2026-10-28 07:50:39,la02,10,5,descent,cadical153,635,"don gian (max job, max tai may)",729,heuristic (co lich kem theo),655,655,True,OPTIMAL,51,38.7,162.2
+2026-10-28 07:50:46,la02,10,5,binary,cadical153,635,"don gian (max job, max tai may)",729,heuristic (co lich kem theo),655,655,True,OPTIMAL,7,7.29,155.9
+2026-10-28 07:58:52,ft10,10,10,descent,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,128,436.34,407.0
+2026-10-28 08:00:02,ft10,10,10,binary,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,8,69.83,364.9

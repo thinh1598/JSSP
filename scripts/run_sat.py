@@ -47,7 +47,7 @@ def main() -> int:
     if args.json:
         print(json.dumps({"instance": inst.name, "L": args.L, "solver": solver_name, "status": r.status,
                           "makespan": r.makespan, "valid": (not errs) if r.status == "SAT" else None,
-                          "vars": r.num_vars,
+                          "starts": r.starts, "vars": r.num_vars,
                           "clauses": r.num_clauses, "encode_time": round(r.encode_time, 3),
                           "solve_time": round(r.solve_time, 3)}))
         return 0
