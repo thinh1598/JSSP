@@ -23,7 +23,7 @@ Cac quy tac (R1..R8 la cua bai bao; R9 la bo sung cua nhom, xem notes/crawford_n
 """
 from __future__ import annotations
 
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .instance import JSSPInstance
 
@@ -188,6 +188,20 @@ class CrawfordEncoder:
                 t -= 1
             starts[op[0]][op[1]] = t
         return starts
+
+    # ------------------------------------------------------------------ gia dinh (cho Incremental SAT)
+    def assumptions_for(self, L: int) -> Optional[List[int]]:
+        """Cac literal GIA DINH "makespan <= L" khi cong thuc duoc ma hoa o chan troi H = self.L >= L.
+
+        Chinh la quy tac R4 voi L moi: eb[a, L - tail(a)] cho moi thao tac a. Truyen chung vao
+        solver.solve(assumptions=...) thay vi them thanh clause, nen cong thuc goc KHONG doi va cac
+        clause hoc duoc van dung cho moi L. Tra ve None neu mot job da dai hon L (chac chan UNSAT).
+        """
+        if L > self.L:
+            raise ValueError(f"L={L} vuot chan troi H={self.L} cua ma hoa")
+        if L < 0 or any(self._head[o] + self._p[o] + self._tail[o] > L for o in self._ops):
+            return None
+        return [self.eb(op, L - self._tail[op]) for op in self._ops]
 
     # ------------------------------------------------------------------ de doc / hoc
     @staticmethod

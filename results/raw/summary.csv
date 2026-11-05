@@ -7,3 +7,15 @@ timestamp,instance,n_jobs,n_machines,method,solver,lb_init,lb_source,ub_init,ub_
 2026-10-28 07:50:46,la02,10,5,binary,cadical153,635,"don gian (max job, max tai may)",729,heuristic (co lich kem theo),655,655,True,OPTIMAL,7,7.29,155.9
 2026-10-28 07:58:52,ft10,10,10,descent,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,128,436.34,407.0
 2026-10-28 08:00:02,ft10,10,10,binary,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,8,69.83,364.9
+2026-11-05 16:36:19,ft06,6,6,descent,cadical153,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,5,1.65,30.3
+2026-11-05 16:36:21,ft06,6,6,binary,cadical153,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,4,1.07,30.1
+2026-11-05 16:36:21,ft06,6,6,inc_descent,cadical153,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,5,0.2,29.9
+2026-11-05 16:36:21,ft06,6,6,inc_binary,cadical153,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,4,0.21,30.4
+2026-11-05 16:36:41,la01,10,5,descent,cadical153,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,27,19.75,157.9
+2026-11-05 16:36:45,la01,10,5,binary,cadical153,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,6,3.94,153.6
+2026-11-05 16:36:46,la01,10,5,inc_descent,cadical153,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,40,1.24,158.4
+2026-11-05 16:36:47,la01,10,5,inc_binary,cadical153,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,6,1.14,158.0
+2026-11-05 16:46:49,ft10,10,10,descent,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,128,425.69,407.0
+2026-11-05 16:47:56,ft10,10,10,binary,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,8,66.96,365.5
+2026-11-05 16:48:37,ft10,10,10,inc_descent,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,145,40.93,426.4
+2026-11-05 16:49:02,ft10,10,10,inc_binary,cadical153,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,8,24.94,424.7

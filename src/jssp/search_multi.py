@@ -7,6 +7,10 @@ Hai cach chon L tiep theo (moi lan goi la mot lan giai S_L doc lap, trong tien t
   binary  (chia doi):  giu [lo, hi]; hi la makespan DA CO lich, lo la can duoi DA CHUNG MINH.
                        mid = (lo+hi)//2. SAT -> hi = makespan tim duoc. UNSAT -> lo = mid+1. Dung khi lo == hi.
 
+Hai cach 'inc_descent' / 'inc_binary' chon L y het, nhung dung INCREMENTAL SAT (xem incremental.py): toan bo vong
+lap chay trong MOT tien trinh con (scripts/run_inc.py), ma hoa 1 lan o chan troi H = UB. Luu y: timeout CHI ap dung cho
+ca phien (total_timeout), khong co timeout tung lan hoi; bo nho dinh do cho ca phien.
+
 Bat bien: moi lich dung de cap nhat UB deu duoc kiem tra lai bang validate_schedule o tien trinh cha.
 Neu bi dung giua chung (timeout/het RAM) ta van co khoang [lo, hi] da chung minh, giong Bang 5 cua bai bao.
 """
@@ -26,6 +30,7 @@ from .validate import makespan, validate_schedule
 
 ROOT = Path(__file__).resolve().parents[2]
 RUN_SAT = ROOT / "scripts" / "run_sat.py"
+RUN_INC = ROOT / "scripts" / "run_inc.py"
 
 CALL_FIELDS = ["timestamp", "instance", "method", "solver", "call_idx", "L", "status", "makespan", "valid",
                "vars", "clauses", "encode_time", "solve_time", "wall_time", "peak_mem_mb", "lb_after", "ub_after"]
@@ -82,8 +87,8 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
            mem_limit_mb: Optional[float] = None, tiny: bool = False, calls_log: Optional[CsvLog] = None,
            summary_log: Optional[CsvLog] = None, save_dir: Optional[Path] = None,
            verbose: bool = True) -> SearchResult:
-    if method not in ("descent", "binary"):
-        raise ValueError("method phai la 'descent' hoac 'binary'")
+    if method not in ("descent", "binary", "inc_descent", "inc_binary"):
+        raise ValueError("method phai la 'descent', 'binary', 'inc_descent' hoac 'inc_binary'")
     path = Path(path)
     inst: JSSPInstance = read_instance(path)
     t_start = time.perf_counter()
@@ -137,8 +142,52 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
         log_call(d)
     ub_init, lb_init = state["hi"], state["lo"]
 
+    # ---- Incremental SAT: MOT tien trinh con lam het vong lap (ma hoa 1 lan, doi L bang assumptions)
+    extra = {"peak": None}
+
+    def inc_phase() -> str:
+        remain = total_timeout - (time.perf_counter() - t_start)
+        if remain <= 0:
+            return "TIMEOUT"
+        cmd = [sys.executable, str(RUN_INC), str(path), "--method", method[4:], "--lo", str(state["lo"]),
+               "--hi", str(state["hi"]), "--solver", solver]
+        if tiny:
+            cmd.append("--tiny")
+        info = run_with_limits(cmd, timeout=remain, mem_limit_mb=mem_limit_mb)
+        extra["peak"] = None if info.peak_mem_mb is None else round(info.peak_mem_mb, 1)
+        events = []
+        for line in info.stdout.splitlines():
+            try:
+                events.append(json.loads(line))
+            except ValueError:
+                pass                      # dong cuoi co the bi cat khi tien trinh bi giet
+        enc = next((e for e in events if e.get("event") == "encoded"), {})
+        # Phat lai tung lan hoi o tien trinh cha: kiem tra lai lich va cap nhat LB/UB theo dung quy tac
+        for k, e in enumerate(e for e in events if e.get("event") == "call"):
+            d = {kk: v for kk, v in e.items() if kk != "event"}
+            d.update(vars=enc.get("vars"), clauses=enc.get("clauses"),
+                     encode_time=enc.get("encode_time", 0.0) if k == 0 else 0.0)
+            if d["status"] == "SAT":
+                if not accept_schedule(d):
+                    log_call(d)
+                    return "ERROR"
+            else:
+                state["lo"] = state["hi"] if method == "inc_descent" else d["L"] + 1
+            log_call(d)
+        if state["lo"] >= state["hi"]:
+            return "OPTIMAL"              # da xong du co bi giet sau lan hoi cuoi
+        if info.status != "OK":
+            return info.status            # TIMEOUT | MEMOUT: van con khoang [lo, hi] da chung minh
+        if verbose:
+            print("tien trinh incremental loi:", (info.stderr or info.stdout).strip()[-500:])
+        return "ERROR"
+
     # ---- vong lap chinh
-    while status == "OPTIMAL" and state["hi"] is not None and state["lo"] < state["hi"]:
+    if method.startswith("inc_"):
+        if status == "OPTIMAL" and state["hi"] is not None and state["lo"] < state["hi"]:
+            status = inc_phase()
+    while not method.startswith("inc_") and status == "OPTIMAL" and state["hi"] is not None \
+            and state["lo"] < state["hi"]:
         lo, hi = state["lo"], state["hi"]
         L = hi - 1 if method == "descent" else (lo + hi) // 2
         d = do_call(L)
@@ -157,6 +206,8 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
                        state["hi"] if state["hi"] is not None else -1, optimal, status, len(calls), total,
                        state["starts"], calls)
     peaks = [c["peak_mem_mb"] for c in calls if c.get("peak_mem_mb") is not None]
+    if extra["peak"] is not None:
+        peaks.append(extra["peak"])       # incremental: bo nho dinh cua CA phien (khong tach duoc tung lan hoi)
     if summary_log:
         summary_log.append({"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "instance": inst.name,
                             "n_jobs": inst.n_jobs, "n_machines": inst.n_machines, "method": method,

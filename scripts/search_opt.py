@@ -4,6 +4,8 @@ Vi du (chay tu thu muc goc repo):
     python scripts/search_opt.py ft06 --method both
     python scripts/search_opt.py ft06 la01 la02 --method binary --per-call-timeout 300
     python scripts/search_opt.py ft10 --method binary --total-timeout 3600 --mem-limit-mb 8000
+    python scripts/search_opt.py ft10 --method inc_binary --solver glucose4     # Incremental SAT
+    python scripts/search_opt.py ft06 la01 --method all                          # so sanh ca 4 cach
     python scripts/search_opt.py abz9 --ub 678 --lb 662 --method binary      # dung can tai lieu (UB duoc xac nhan 1 lan giai)
 
 Ket qua: results/raw/calls.csv (moi lan giai mot dong), results/raw/summary.csv (moi lan tim mot dong),
@@ -23,7 +25,10 @@ from jssp.search_multi import CALL_FIELDS, SUMMARY_FIELDS, resolve_instance, sea
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("instances", nargs="+", help="ten bai (ft06, la01, ...) hoac duong dan file")
-    ap.add_argument("--method", choices=["descent", "binary", "both"], default="both")
+    ap.add_argument("--method", default="both",
+                    choices=["descent", "binary", "both", "inc_descent", "inc_binary", "inc_both", "all"],
+                    help="descent/binary = SAT nhieu lan; inc_* = Incremental SAT; both = descent+binary; "
+                         "inc_both = inc_descent+inc_binary; all = ca 4 cach")
     ap.add_argument("--solver", default="cadical153")
     ap.add_argument("--per-call-timeout", type=float, default=600, help="giay cho MOI lan giai")
     ap.add_argument("--total-timeout", type=float, default=3600, help="giay cho CA lan tim (moi bai, moi cach)")
@@ -37,7 +42,9 @@ def main() -> int:
     out = Path(args.out)
     calls_log = CsvLog(out / "calls.csv", CALL_FIELDS)
     summary_log = CsvLog(out / "summary.csv", SUMMARY_FIELDS)
-    methods = ["descent", "binary"] if args.method == "both" else [args.method]
+    groups = {"both": ["descent", "binary"], "inc_both": ["inc_descent", "inc_binary"],
+              "all": ["descent", "binary", "inc_descent", "inc_binary"]}
+    methods = groups.get(args.method, [args.method])
 
     rows = []
     for name in args.instances:
@@ -49,10 +56,10 @@ def main() -> int:
             rows.append(r)
 
     print("\n" + "=" * 78)
-    print(f"{'bai':8s} {'cach':8s} {'ket qua':10s} {'LB':>6s} {'UB':>6s} {'so lan giai':>11s} {'giay':>9s}")
+    print(f"{'bai':8s} {'cach':12s} {'ket qua':10s} {'LB':>6s} {'UB':>6s} {'so lan giai':>11s} {'giay':>9s}")
     for r in rows:
         verdict = f"toi uu {r.ub}" if r.optimal else r.status
-        print(f"{r.instance:8s} {r.method:8s} {verdict:10s} {r.lb:6d} {r.ub:6d} {r.n_calls:11d} {r.total_time:9.1f}")
+        print(f"{r.instance:8s} {r.method:12s} {verdict:10s} {r.lb:6d} {r.ub:6d} {r.n_calls:11d} {r.total_time:9.1f}")
     print(f"\nDa ghi: {out / 'calls.csv'} va {out / 'summary.csv'}")
     return 0 if all(r.optimal for r in rows) else 1
 
