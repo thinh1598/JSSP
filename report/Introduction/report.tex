@@ -1,0 +1,142 @@
+\documentclass[a4paper,fleqn]{cas-sc} % Template latex của nhà xuất bản Elsevier
+
+\usepackage[numbers]{natbib}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc} % Hỗ trợ tiếng Việt
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+
+% Tựa đề bài báo
+\title[mode = title]{Giải quyết bài toán lập lịch Job Shop bằng phương pháp mã hóa SAT}
+
+% Thông tin tác giả
+\author[1]{Nguyễn Phúc Thịnh}
+\author[1]{Đỗ Việt Hoàng}
+
+\affiliation[1]{organization={Khoa Công nghệ Thông tin, Trường Đại học Công nghệ - ĐHQGHN},
+    city={Hà Nội},
+    country={Việt Nam}}
+
+\begin{abstract}
+Báo cáo này nghiên cứu việc áp dụng phương pháp mã hóa thỏa mãn logic (SAT - Boolean Satisfiability) để giải quyết bài toán lập lịch Job Shop (JSSP). Bằng cách chuyển đổi các ràng buộc lập lịch thành một bài toán SAT thông qua phương pháp mã hóa Crawford, chúng tôi hướng tới việc tìm ra thời gian hoàn thành (makespan) tối ưu. Báo cáo này trình bày định nghĩa bài toán chi tiết, các quy tắc mã hóa SAT, và thiết lập nền tảng cho các thực nghiệm đánh giá sử dụng các bộ giải SAT (SAT solvers) hiện đại.
+\end{abstract}
+
+\begin{keywords}
+Bài toán lập lịch Job Shop \sep Giải SAT \sep Mã hóa Crawford \sep Tối ưu hóa tổ hợp
+\end{keywords}
+
+\maketitle
+
+\section{Giới thiệu}
+Lập lịch sản xuất đóng vai trò trung tâm trong việc nâng cao năng suất, tối ưu hóa việc sử dụng tài nguyên và cải thiện hiệu quả sản xuất. Trong đó, Bài toán lập lịch Job Shop (JSSP) là một trong những bài toán tối ưu hóa tổ hợp kinh điển và được nghiên cứu rộng rãi nhất nhờ tính ứng dụng thực tiễn cao và độ phức tạp tính toán thuộc lớp NP-khó \cite{nguyen2026exact}[cite: 191, 194].
+
+Trong khi các phương pháp heuristic và metaheuristic được sử dụng rộng rãi để tìm ra các giải pháp có chất lượng cao trong thời gian hợp lý, các phương pháp tiếp cận chính xác (exact methods) là cần thiết để cung cấp các đảm bảo về tính tối ưu \cite{nguyen2026exact}[cite: 194]. Những tiến bộ gần đây của các bộ giải SAT đã đưa tối ưu hóa chính xác dựa trên SAT trở thành một phương pháp mang tính cạnh tranh cao. Bằng cách đưa bài toán lập lịch về một chuỗi các bài toán quyết định SAT, các bộ giải SAT hiện đại có thể chứng minh tính khả thỏa và xác nhận giới hạn tối ưu.
+
+Báo cáo này tập trung vào việc cài đặt và đánh giá phương pháp mã hóa SAT do Crawford và Baker đề xuất, và được Koshimura et al. \cite{koshimura2010solving} công thức hóa một cách rõ ràng[cite: 214, 215]. Chúng tôi sẽ trình bày mô hình toán học cơ sở, chi tiết mã hóa Boolean, và thiết lập bộ khung cho các thực nghiệm đánh giá sau này.
+
+\section{Tài liệu liên quan}
+Tài liệu nghiên cứu về việc giải quyết JSSP bao gồm nhiều phương pháp chính xác và heuristic \cite{nguyen2026exact}[cite: 194]. Các phương pháp chính xác truyền thống thường dựa trên Quy hoạch tuyến tính nguyên hỗn hợp (MILP) hoặc Lập trình ràng buộc (CP) \cite{nguyen2026exact}[cite: 194]. 
+
+Bên cạnh đó, các phương pháp tiếp cận dựa trên SAT đã nổi lên như một mô hình tối ưu hóa chính xác mạnh mẽ. Crawford và Baker (1994) đã giới thiệu một mã hóa SAT nền tảng cho các bài toán lập lịch bằng cách biểu diễn các quyết định lập lịch và xung đột tài nguyên dưới dạng các biến Boolean và các mệnh đề logic \cite{nguyen2026exact}[cite: 194, 214]. Dựa trên nền tảng này, Koshimura et al. (2010) đã áp dụng thành công mã hóa Crawford để giải quyết một số ma trận JSSP benchmark đang còn bỏ ngỏ trong lịch sử \cite{nguyen2026exact}[cite: 195, 214]. Cụ thể, họ đã chứng minh được giới hạn tối ưu cho các bài toán khó như ABZ8, ABZ9 và YN1 đến YN4 \cite{koshimura2010solving}[cite: 214].
+
+Những phương pháp luận chính xác này cung cấp một điểm tham chiếu đáng tin cậy cho việc đánh giá chuẩn (benchmarking), từ đó thúc đẩy việc triển khai và tối ưu hóa thuật toán SAT của chúng tôi.
+
+\section{Định nghĩa bài toán}
+\label{sec:problem_definition}
+Bài toán JSSP kinh điển được định nghĩa dựa trên các giả định sau. Tập hợp các công việc (jobs) và lộ trình xử lý của chúng được biết trước khi bắt đầu lập lịch \cite{nguyen2026exact}[cite: 192]. Gọi $\mathcal{J} = \{0, ..., n-1\}$ là tập hợp $n$ jobs và $\mathcal{M} = \{M_0, ..., M_{m-1}\}$ là tập hợp $m$ máy \cite{nguyen2026exact}[cite: 192]. 
+
+Mỗi job $j \in \mathcal{J}$ bao gồm một chuỗi có thứ tự các phép toán (operations) $(op_{j,0}, ..., op_{j,m-1})$, trong đó phép toán $op_{j,i}$ phải được xử lý trên một máy được chỉ định trước $m_{j,i} \in \mathcal{M}$ trong một khoảng thời gian cố định $P_{j,i}$ \cite{nguyen2026exact}[cite: 192]. Các phép toán là không thể ngắt quãng (non-preemptive); một khi phép toán bắt đầu, nó phải tiếp tục cho đến khi hoàn thành \cite{nguyen2026exact}[cite: 192]. Mỗi máy có thể xử lý tối đa một phép toán tại bất kỳ thời điểm nào, và mỗi phép toán chỉ có thể được xử lý bởi một máy tại một thời điểm \cite{nguyen2026exact}[cite: 192].
+
+Một lịch trình (schedule) hợp lệ phải tuân thủ các ràng buộc sau \cite{nguyen2026exact}[cite: 192, 193]:
+\begin{itemize}
+    \item \textbf{Ràng buộc thứ tự (Precedence constraints):} Đảm bảo rằng các phép toán của mỗi job được thực thi theo đúng trình tự đã quy định \cite{nguyen2026exact}[cite: 192, 193]. Cụ thể, với mọi job $j \in \mathcal{J}$, phép toán $op_{j,i+1}$ không thể bắt đầu trước khi phép toán $op_{j,i}$ hoàn thành \cite{nguyen2026exact}[cite: 192, 193].
+    \item \textbf{Ràng buộc năng lực máy (Machine capacity constraints):} Ngăn chặn hai phép toán được phân công cho cùng một máy xảy ra sự trùng lặp (overlap) về mặt thời gian \cite{nguyen2026exact}[cite: 193].
+\end{itemize}
+
+Mục tiêu của bài toán là xác định một lịch trình hợp lệ giúp giảm thiểu makespan, ký hiệu là $C_{max}$, trong khi vẫn thỏa mãn tất cả các ràng buộc về thứ tự ưu tiên và năng lực máy \cite{nguyen2026exact}[cite: 193]. $C_{max}$ được định nghĩa là thời gian hoàn thành của phép toán cuối cùng trong toàn bộ hệ thống.
+
+\section{Mã hóa SAT cho JSSP}
+Để giải JSSP bằng bộ giải SAT, chúng tôi chuyển đổi bài toán tối ưu thành một chuỗi các Bài toán kiểm tra tính thỏa mãn Boolean (Boolean Satisfiability Testing Problem) \cite{koshimura2010solving}[cite: 214]. Tại mỗi bước, hệ thống giả định rằng makespan không vượt quá một giới hạn $L$ cho trước \cite{koshimura2010solving}[cite: 214]. Mã hóa Crawford, theo mô tả của Koshimura et al. \cite{koshimura2010solving}, được sử dụng để chuyển đổi các ràng buộc lập lịch thành dạng Chuẩn hội (CNF - Conjunctive Normal Form)[cite: 214].
+
+Theo đó, giả sử mỗi job $l$ ($1 \le l \le n$) có $q_l$ phép toán, ký hiệu là $O_1^l, ..., O_{q_l}^l$ và mỗi phép toán $O_i^l$ cần thời gian xử lý $p_i^l$ \cite{koshimura2010solving}[cite: 214].
+
+\subsection{Các biến Boolean}
+Quá trình mã hóa sử dụng ba loại biến mệnh đề (propositional variables) chính để mô hình hóa trạng thái của các phép toán trong không gian thời gian \cite{koshimura2010solving}[cite: 214]:
+\begin{itemize}
+    \item $pr_{i,j}^{l,k}$: Mang giá trị Đúng (True) nếu phép toán $O_i^l$ thực hiện trước phép toán $O_j^k$[cite: 214].
+    \item $sa_{i,t}^l$: Mang giá trị Đúng (True) nếu phép toán $O_i^l$ bắt đầu tại thời điểm $t$ hoặc muộn hơn ($start \ge t$)[cite: 214].
+    \item $eb_{i,t}^l$: Mang giá trị Đúng (True) nếu phép toán $O_i^l$ kết thúc trước hoặc tại thời điểm $t$ ($end \le t$)[cite: 214].
+\end{itemize}
+
+\subsection{Các quy tắc mã hóa}
+Các ràng buộc về thứ tự và tài nguyên được thể hiện qua các mệnh đề logic (clauses) như sau \cite{koshimura2010solving}[cite: 214]:
+
+\begin{enumerate}
+    \item \textbf{Thứ tự trong job:} Phép toán $O_i^l$ phải thực hiện trước $O_{i+1}^l$[cite: 214]:
+    \begin{equation}
+        pr_{i,i+1}^{l,l} \quad (1 \le l \le n, 1 \le i < q_l)
+    \end{equation}
+    
+    \item \textbf{Khả năng đáp ứng của máy:} Nếu hai phép toán $O_i^l$ và $O_j^k$ yêu cầu cùng một máy, chúng không được phép trùng lặp. Tức là $O_i^l$ thực hiện trước $O_j^k$, hoặc ngược lại[cite: 214]:
+    \begin{equation}
+        pr_{i,j}^{l,k} \lor pr_{j,i}^{k,l} \quad (1 \le l < k \le n)
+    \end{equation}
+    
+    \item \textbf{Thời gian bắt đầu sớm nhất:} Phép toán $O_i^l$ không thể bắt đầu trước khi tất cả các phép toán tiền nhiệm của nó trong cùng job $l$ được hoàn thành. Nó yêu cầu ít nhất thời gian $t = \sum_{u=1}^{i-1} p_u^l$[cite: 214]. Do đó:
+    \begin{equation}
+        sa_{i,t}^l \quad \text{với } t = \sum_{u=1}^{i-1} p_u^l
+    \end{equation}
+    
+    \item \textbf{Thời gian kết thúc muộn nhất:} Để hoàn thành tất cả các job với makespan tối đa là $L$, phép toán $O_i^l$ bắt buộc phải kết thúc tại hoặc trước thời hạn chót[cite: 214]:
+    \begin{equation}
+        eb_{i,t}^l \quad \text{với } t = L - \sum_{u=i+1}^{q_l} p_u^l
+    \end{equation}
+    
+    \item \textbf{Tính đơn điệu của thời gian bắt đầu:} Nếu $O_i^l$ bắt đầu tại hoặc sau thời điểm $t$, thì nó hiển nhiên cũng bắt đầu tại hoặc sau thời điểm $t-1$[cite: 214]:
+    \begin{equation}
+        sa_{i,t}^l \to sa_{i,t-1}^l \quad (1 \le t \le L)
+    \end{equation}
+    
+    \item \textbf{Tính đơn điệu của thời gian kết thúc:} Nếu $O_i^l$ kết thúc trước thời điểm $t$, thì nó hiển nhiên cũng kết thúc trước thời điểm $t+1$[cite: 215]:
+    \begin{equation}
+        eb_{i,t}^l \to eb_{i,t+1}^l \quad (0 \le t < L)
+    \end{equation}
+    
+    \item \textbf{Thời lượng xử lý:} Khoảng thời gian từ lúc bắt đầu đến lúc kết thúc không được nhỏ hơn thời gian xử lý $p_i^l$. Nếu $O_i^l$ bắt đầu tại hoặc sau $t$, nó không thể kết thúc trước $t + p_i^l - 1$[cite: 215]:
+    \begin{equation}
+        sa_{i,t}^l \to \neg eb_{i, t+p_i^l-1}^l \quad (0 \le t \le L - p_i^l + 1)
+    \end{equation}
+    
+    \item \textbf{Hệ quả của thứ tự ưu tiên trên máy:} Dựa vào biến $pr$ được tạo ở quy tắc 1 và 2. Nếu $O_i^l$ bắt đầu tại hoặc sau $t$ và thực hiện trước $O_j^k$, thì $O_j^k$ không thể bắt đầu cho đến khi $O_i^l$ đã xử lý xong (tốn $p_i^l$ thời gian)[cite: 215]:
+    \begin{equation}
+        sa_{i,t}^l \land pr_{i,j}^{l,k} \to sa_{j, t+p_i^l}^k \quad (0 \le t \le L - p_i^l)
+    \end{equation}
+\end{enumerate}
+
+Bằng cách chuyển đổi công thức logic trên thành các mệnh đề (clauses) của một tập tin CNF, nếu bộ giải SAT tìm được một phép gán thỏa mãn (truth assignment) cho công thức, thì bài toán JSSP có thể hoàn thành tất cả các công việc trong thời gian giới hạn $L$ \cite{koshimura2010solving}[cite: 214, 215].
+
+% Phần Thực nghiệm và Kết quả sẽ được bổ sung sau.
+
+\bibliographystyle{cas-model2-names}
+\begin{thebibliography}{10}
+
+\bibitem[Nguyen et al.(2026)]{nguyen2026exact}
+Nguyen, Huy Tuan, Duc Trung Kim Nguyen, and Khanh To Van.
+\newblock ``Exact SAT and Constraint Programming for Job Shop Scheduling with Time-Varying Peak Power Constraints."
+\newblock \emph{Unpublished manuscript} (2026).
+
+\bibitem[Koshimura et al.(2010)]{koshimura2010solving}
+Koshimura, Miyuki, et al.
+\newblock ``Solving open job-shop scheduling problems by SAT encoding."
+\newblock \emph{IEICE TRANSACTIONS on Information and Systems} 93.8 (2010): 2316-2318.
+
+\end{thebibliography}
+
+\end{document}
