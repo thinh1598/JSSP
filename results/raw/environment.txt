@@ -1,0 +1,18 @@
+thoi diem: 2026-11-08 20:36:24
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+psutil: 7.2.2
+---
+thoi diem: 2026-11-08 22:30:15
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+psutil: 7.2.2
+---

@@ -6,7 +6,7 @@ Cho một bài xếp lịch JSSP, tìm **makespan nhỏ nhất** bằng cách h�
 "có lịch với makespan ≤ L không?" (SAT = có, UNSAT = không).
 Tối ưu = k khi hỏi L = k−1 ra UNSAT và hỏi L = k ra SAT.
 
-## Sáu ngày = sáu lớp xếp chồng
+## Tám ngày = tám lớp xếp chồng
 
 | Ngày | Có thêm gì | Một câu |
 |---|---|---|
@@ -16,6 +16,8 @@ Tối ưu = k khi hỏi L = k−1 ra UNSAT và hỏi L = k ra SAT.
 | 4 | Kiểm tra với đáp án đã biết | Biết chương trình đúng |
 | 5 | Tìm tối ưu tự động + ghi CSV | Hỏi nhiều lần để ra đáp án |
 | 6 | Incremental SAT | Mã hóa 1 lần, đổi L bằng assumptions, solver giữ lại thứ đã học |
+| 7 | Baseline CP-SAT | Công cụ xếp lịch khác (OR-Tools) để so với SAT |
+| 8 | Chạy hàng loạt | Bài vừa/lớn, nhiều cách, qua đêm, tiếp tục được |
 
 ## Bản đồ file (trong `src/jssp/`)
 
@@ -29,6 +31,9 @@ Tối ưu = k khi hỏi L = k−1 ra UNSAT và hỏi L = k ra SAT.
 | `runner.py` | Chạy lệnh trong tiến trình riêng, giới hạn giờ/RAM, ghi CSV | Không (chỉ cần biết có) |
 | `search_multi.py` | **Bộ não: hai cách chọn L (giảm dần / chia đôi), mỗi cách có bản thường và bản incremental** | **Có** |
 | `incremental.py` | Ngày 6: phiên solver sống lâu, đổi L bằng assumptions | **Có** |
+| `cpsat.py` | Ngày 7: mô hình CP-SAT (interval + NoOverlap) | Có (baseline) |
+| `baselines.py` | Ngày 7: chạy baseline trong tiến trình riêng, ghi chung `summary.csv` | Không (chỉ cần biết có) |
+| `suite.py` | Ngày 8: lập kế hoạch + chạy hàng loạt, bỏ qua ô đã chạy | Không (chỉ cần biết có) |
 | `gantt.py` | Vẽ biểu đồ Gantt | Dùng cho hình |
 | `minisolver.py` | DPLL nhỏ, chỉ để test khi không có PySAT | Không |
 
@@ -56,6 +61,9 @@ Dừng khi `lo == hi`.
 | Tìm tối ưu (cả 2 cách) | `python scripts/search_opt.py ft06 --method both` |
 | Incremental SAT | `python scripts/search_opt.py ft06 --method inc_both` |
 | So cả 4 cách | `python scripts/search_opt.py ft06 la01 --method all` |
+| Baseline CP-SAT | `python scripts/run_baseline.py ft06 la01` (cần `pip install ortools`) |
+| Xem kế hoạch chạy hàng loạt | `python scripts/run_suite.py --tier medium --dry-run` |
+| Chạy hàng loạt (tiếp tục được) | `python scripts/run_suite.py --tier medium --max-hours 5` |
 | Chạy test | `python -m pytest` |
 
 ## Kết quả hiện có
@@ -77,14 +85,14 @@ Dừng khi `lo == hi`.
 
 ## Còn lại phải làm (theo kế hoạch)
 
-1. Chạy Incremental SAT trên máy bạn và so với cách cũ (ngày 6).
-2. Baseline: CP-SAT, CPLEX CP/MIP, Gurobi (thư mục `models/`).
+1. Chạy bậc medium rồi large bằng `run_suite.py` (ngày 8), gửi `summary.csv` + `environment.txt`.
+2. Baseline còn lại: CPLEX CP/MIP, Gurobi (thư mục `models/`; cần giấy phép học thuật).
 3. Thêm solver SAT (Glucose, CryptoMiniSat/Kissat).
 4. Bài lớn hơn (ABZ, YN, TA).
 5. Cải tiến/ablation, vẽ hình (cnsplots), báo cáo LaTeX `cas-sc`, dọn README.
 
 ## Việc cần nhớ
 
-- Chạy `python -m pytest` và xác nhận tất cả test qua (kỳ vọng sau ngày 6: 37 passed, 1 skipped).
+- Chạy `python -m pytest` và xác nhận tất cả test qua (kỳ vọng sau ngày 8: 56 passed, 1 skipped).
 - Chạy `python scripts/verify_known.py` **một lần cho tất cả bài** (mỗi lần chạy ghi đè `small_check.md`).
 - Các cận "literature" trong `data/known_bounds.csv` cần đối chiếu nguồn công khai trước khi trích dẫn.
