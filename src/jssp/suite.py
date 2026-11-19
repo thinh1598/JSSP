@@ -5,7 +5,7 @@ Dac diem:
     nen bi ngat (tat may, Ctrl+C) roi chay lai cung lenh la duoc.
   - Gioi han ca phien (--max-hours): het gio thi dung khong bat dau o moi.
   - Duyet theo BAI truoc (moi bai chay xong cac cach roi moi sang bai khac), de bi ngat giua chung van co bai tron ven.
-  - Moi o dung dung quy cach da kiem chung: search_multi.search (SAT) hoac baselines.run_cpsat (CP-SAT).
+  - Moi o dung dung quy cach da kiem chung: search_multi.search (SAT) hoac baselines.run_cpsat (CP-SAT), run_gurobi (Gurobi MIP), run_cpo (CPLEX CP Optimizer) hoac run_cplex (CPLEX MIP).
 """
 from __future__ import annotations
 
@@ -17,20 +17,21 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from .baselines import run_cpsat
+from .baselines import LICENSE_STATUSES, run_cplex, run_cpo, run_cpsat, run_gurobi
 from .instance import read_instance
 from .runner import CsvLog
 from .search_multi import CALL_FIELDS, ROOT, SUMMARY_FIELDS, resolve_instance, search
 
 SAT_METHODS = ("descent", "binary", "inc_descent", "inc_binary")
-ALL_METHODS = SAT_METHODS + ("cpsat",)
+BASELINE_METHODS = ("cpsat", "gurobi", "cpo", "cplex")
+ALL_METHODS = SAT_METHODS + BASELINE_METHODS
 
 # bac -> (danh sach bai, ngan sach giay cho MOI o, cac cach mac dinh).  Day la DU DOAN do kho, chua do tren may ban:
 # o het gio van la ket qua hop le (bao khoang [LB, UB]).
 TIERS: Dict[str, Tuple[List[str], int, List[str]]] = {
     "small": (["ft06", "la01", "la02", "la03", "la04", "la05", "ft10"], 600, list(ALL_METHODS)),
-    "medium": (["la06", "la11", "la16", "la21", "abz5", "abz6", "orb01"], 900, ["inc_binary", "binary", "cpsat"]),
-    "large": (["abz7", "abz8", "abz9", "yn1", "yn2", "yn3", "yn4"], 3600, ["inc_binary", "cpsat"]),
+    "medium": (["la06", "la11", "la16", "la21", "abz5", "abz6", "orb01"], 900, ["inc_binary", "binary", "cpsat", "gurobi", "cpo", "cplex"]),
+    "large": (["abz7", "abz8", "abz9", "yn1", "yn2", "yn3", "yn4"], 3600, ["inc_binary", "cpsat", "gurobi", "cpo", "cplex"]),
 }
 
 
@@ -38,6 +39,12 @@ def solver_label(method: str, solver: str, tiny: bool, workers: int) -> str:
     """Nhan ghi o cot 'solver' cua summary.csv (phai khop voi search_multi / baselines)."""
     if method == "cpsat":
         return f"cpsat-w{workers}"
+    if method == "gurobi":
+        return f"gurobi-t{workers}"
+    if method == "cpo":
+        return f"cpo-w{workers}"
+    if method == "cplex":
+        return f"cplex-t{workers}"
     return "DPLL-tiny" if tiny else solver
 
 
@@ -97,7 +104,7 @@ def write_environment(path) -> None:
         lines.append(f"RAM: {psutil.virtual_memory().total / 2**30:.1f} GB")
     except Exception:
         pass
-    for mod in ("pysat", "ortools", "psutil"):
+    for mod in ("pysat", "ortools", "gurobipy", "docplex", "psutil"):
         try:
             m = __import__(mod)
             lines.append(f"{mod}: {getattr(m, '__version__', '?')}")
@@ -111,7 +118,8 @@ def write_environment(path) -> None:
 def run_suite(cells: Iterable[Cell], budget: float, solver: str = "cadical153", tiny: bool = False,
               workers: int = 1, mem_limit_mb: Optional[float] = None, out_dir=None,
               max_seconds: Optional[float] = None, clock: Callable[[], float] = time.perf_counter,
-              run_sat=search, run_cp=run_cpsat, say: Callable[[str], None] = print) -> Tuple[List, bool]:
+              run_sat=search, run_cp=run_cpsat, run_gu=run_gurobi, run_cpo=run_cpo, run_cx=run_cplex,
+              say: Callable[[str], None] = print) -> Tuple[List, bool]:
     """Chay cac o can chay. Tra ve (danh sach ket qua, bi_dung_do_het_gio_phien)."""
     out = Path(out_dir) if out_dir else ROOT / "results" / "raw"
     calls_log = CsvLog(out / "calls.csv", CALL_FIELDS)
@@ -119,15 +127,23 @@ def run_suite(cells: Iterable[Cell], budget: float, solver: str = "cadical153", 
     save_dir = out.parent / "schedules"          # mac dinh results/raw -> results/schedules
     t0 = clock()
     results: List = []
+    dead = set()                                 # cach bi loi giay phep / thu vien: khong thu lai cho cac o con lai
+    baseline = {"cpsat": run_cp, "gurobi": run_gu, "cpo": run_cpo, "cplex": run_cx}
     for c in cells:
         if not c.run:
+            continue
+        if c.method in dead:
+            say(f"\n##### {c.name} | {c.method} | bo qua ({c.method} chua dung duoc: xem thong bao o tren)")
             continue
         if max_seconds is not None and clock() - t0 >= max_seconds:
             say("\nHet gio phien (--max-hours): dung. Chay lai CUNG lenh de tiep tuc cac o con lai.")
             return results, True
         say(f"\n##### {c.name} ({c.size}) | {c.method} | ngan sach {budget:.0f}s | {c.reason}")
-        if c.method == "cpsat":
-            r = run_cp(c.path, budget, workers, 0, mem_limit_mb, summary_log, save_dir, True)
+        if c.method in baseline:
+            r = baseline[c.method](c.path, budget, workers, 0, mem_limit_mb, summary_log, save_dir, True)
+            if getattr(r, "status", None) in LICENSE_STATUSES:
+                dead.add(c.method)
+                continue                         # khong phai ket qua thi nghiem: khong dua vao bang tong ket
         else:
             r = run_sat(c.path, c.method, solver, None, None, budget, budget, mem_limit_mb, tiny,
                         calls_log, summary_log, save_dir, True)

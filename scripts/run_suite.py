@@ -28,7 +28,7 @@ def main() -> int:
     ap.add_argument("--methods", help=f"cach giai, cach nhau dau phay, trong: {','.join(ALL_METHODS)}")
     ap.add_argument("--budget", type=float, help="giay cho MOI o (bai x cach); mac dinh theo bac")
     ap.add_argument("--solver", default="cadical153")
-    ap.add_argument("--workers", type=int, default=1, help="so luong CP-SAT (mac dinh 1, cong bang voi CaDiCaL)")
+    ap.add_argument("--workers", type=int, default=1, help="so luong cua CP-SAT / Gurobi / CPLEX (mac dinh 1, cong bang voi CaDiCaL)")
     ap.add_argument("--mem-limit-mb", type=float, default=None,
                     help="vuot muc nay thi dung o do (MEMOUT). Mac dinh: 70%% RAM cua may")
     ap.add_argument("--max-hours", type=float, default=None, help="het gio phien thi dung, khong bat dau o moi")
@@ -51,7 +51,7 @@ def main() -> int:
         names = args.instances
     if args.methods:
         methods = args.methods.split(",")
-    methods = methods or ["inc_binary", "binary", "cpsat"]
+    methods = methods or ["inc_binary", "binary", "cpsat", "gurobi", "cpo", "cplex"]
     budget = budget or 900
     bad = [m for m in methods if m not in ALL_METHODS]
     if bad:

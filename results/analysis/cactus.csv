@@ -1,0 +1,65 @@
+method,solved,time_s
+Inc. SAT,1,0.21
+Inc. SAT,2,1.14
+Inc. SAT,3,2.41
+Inc. SAT,4,3.01
+Inc. SAT,5,6.73
+Inc. SAT,6,11.75
+Inc. SAT,7,16.44
+Inc. SAT,8,24.94
+Inc. SAT,9,40.65
+Inc. SAT,10,74.01
+SAT (chia doi),1,1.07
+SAT (chia doi),2,3.94
+SAT (chia doi),3,7.16
+SAT (chia doi),4,8.03
+SAT (chia doi),5,10.56
+SAT (chia doi),6,35.66
+SAT (chia doi),7,49.06
+SAT (chia doi),8,66.96
+SAT (chia doi),9,91.05
+SAT (chia doi),10,109.05
+CP-SAT,1,1.46
+CP-SAT,2,1.6
+CP-SAT,3,2.13
+CP-SAT,4,2.47
+CP-SAT,5,2.76
+CP-SAT,6,2.8
+CP-SAT,7,4.86
+CP-SAT,8,5.68
+CP-SAT,9,39.72
+CP-SAT,10,86.64
+CP-SAT,11,555.83
+Gurobi MIP,1,0.72
+Gurobi MIP,2,0.98
+Gurobi MIP,3,2.35
+Gurobi MIP,4,3.18
+Gurobi MIP,5,3.93
+Gurobi MIP,6,5.91
+Gurobi MIP,7,6.77
+Gurobi MIP,8,12.99
+Gurobi MIP,9,78.41
+Gurobi MIP,10,94.59
+CP Optimizer,1,0.84
+CP Optimizer,2,0.91
+CP Optimizer,3,1.28
+CP Optimizer,4,1.47
+CP Optimizer,5,1.48
+CP Optimizer,6,2.73
+CP Optimizer,7,2.75
+CP Optimizer,8,2.89
+CP Optimizer,9,3.18
+CP Optimizer,10,4.43
+CP Optimizer,11,16.24
+CP Optimizer,12,37.52
+CP Optimizer,13,1301.78
+CPLEX MIP,1,0.44
+CPLEX MIP,2,0.8
+CPLEX MIP,3,2.54
+CPLEX MIP,4,2.84
+CPLEX MIP,5,7.22
+CPLEX MIP,6,9.7
+CPLEX MIP,7,25.62
+CPLEX MIP,8,27.43
+CPLEX MIP,9,90.21
+CPLEX MIP,10,147.32

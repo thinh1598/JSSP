@@ -4,3 +4,5 @@ __pycache__/
 results/raw/*.cnf
 *.log
 .DS_Store
+gurobi.lic
+*.lic

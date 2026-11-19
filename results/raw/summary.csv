@@ -70,3 +70,72 @@ timestamp,instance,n_jobs,n_machines,method,solver,lb_init,lb_source,ub_init,ub_
 2026-11-09 04:30:25,abz9,20,15,cpsat,cpsat-w1,563,"don gian (max job, max tai may)",834,heuristic (co lich kem theo),616,692,False,TIMEOUT,1,3603.88,141.6
 2026-11-09 05:30:25,yn1,20,20,inc_binary,cadical153,694,"don gian (max job, max tai may)",1005,heuristic (co lich kem theo),850,927,False,TIMEOUT,2,3600.06,1697.7
 2026-11-09 06:30:32,yn1,20,20,cpsat,cpsat-w1,694,"don gian (max job, max tai may)",1005,heuristic (co lich kem theo),764,906,False,TIMEOUT,1,3606.3,121.4
+2026-11-09 14:17:05,la21,15,10,hybrid_B,cadical153+cpsat-w1,935,"hop nhat: max(SAT tu 935, CP-SAT 996)",1249,heuristic 1249 -> CP-SAT 180s: 1053,1025,1053,False,TIMEOUT,2,900.05,815.9
+2026-11-09 14:29:04,la21,15,10,hybrid_C,cadical153+cpsat-w1,935,hop nhat: SAT tu CP-SAT 996,1249,heuristic 1249 -> CP-SAT 180s: 1053,1025,1053,False,TIMEOUT,1,900.09,818.6
+2026-11-09 14:43:17,orb01,10,10,hybrid_B,cadical153+cpsat-w1,695,"hop nhat: max(SAT tu 695, CP-SAT 935)",1200,heuristic 1200 -> CP-SAT 180s: 1059,1059,1059,True,OPTIMAL,8,852.44,409.9
+2026-11-09 14:54:30,orb01,10,10,hybrid_C,cadical153+cpsat-w1,695,hop nhat: SAT tu CP-SAT 935,1200,heuristic 1200 -> CP-SAT 180s: 1059,1059,1059,True,OPTIMAL,6,854.29,412.3
+2026-11-09 15:57:19,abz7,20,15,hybrid_B,cadical153+cpsat-w1,556,"hop nhat: max(SAT tu 556, CP-SAT 650)",769,heuristic 769 -> CP-SAT 720s: 674,650,674,False,TIMEOUT,1,3620.58,1266.9
+2026-11-09 17:16:44,abz7,20,15,hybrid_C,cadical153+cpsat-w1,556,hop nhat: SAT tu CP-SAT 650,769,heuristic 769 -> CP-SAT 720s: 674,650,674,False,TIMEOUT,0,5486.25,386.6
+2026-11-09 18:16:45,abz8,20,15,hybrid_B,cadical153+cpsat-w1,566,"hop nhat: max(SAT tu 566, CP-SAT 597)",805,heuristic 805 -> CP-SAT 720s: 700,597,700,False,TIMEOUT,0,3600.15,1040.6
+2026-11-09 19:04:21,abz8,20,15,hybrid_C,cadical153+cpsat-w1,566,hop nhat: SAT tu CP-SAT 597,805,heuristic 805 -> CP-SAT 720s: 700,597,700,False,TIMEOUT,0,3600.07,987.2
+2026-11-09 20:04:21,abz9,20,15,hybrid_B,cadical153+cpsat-w1,563,"hop nhat: max(SAT tu 563, CP-SAT 616)",834,heuristic 834 -> CP-SAT 720s: 700,632,700,False,TIMEOUT,1,3600.16,1245.4
+2026-11-09 20:52:19,abz9,20,15,hybrid_C,cadical153+cpsat-w1,563,hop nhat: SAT tu CP-SAT 616,834,heuristic 834 -> CP-SAT 720s: 700,616,700,False,TIMEOUT,0,3600.05,1100.4
+2026-11-09 21:52:19,yn1,20,20,hybrid_B,cadical153+cpsat-w1,694,"hop nhat: max(SAT tu 694, CP-SAT 763)",1005,heuristic 1005 -> CP-SAT 720s: 920,808,920,False,TIMEOUT,1,3600.1,1771.3
+2026-11-09 22:40:16,yn1,20,20,hybrid_C,cadical153+cpsat-w1,694,hop nhat: SAT tu CP-SAT 763,1005,heuristic 1005 -> CP-SAT 720s: 920,842,920,False,TIMEOUT,1,3600.39,1855.1
+2026-11-13 15:40:42,ft06,6,6,gurobi,gurobi-t1,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,1,0.98,34.6
+2026-11-13 15:40:43,la01,10,5,gurobi,gurobi-t1,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,1,0.72,34.4
+2026-11-13 15:42:19,la02,10,5,gurobi,gurobi-t1,635,"don gian (max job, max tai may)",729,heuristic (co lich kem theo),655,655,True,OPTIMAL,1,12.99,46.5
+2026-11-13 15:42:26,la03,10,5,gurobi,gurobi-t1,588,"don gian (max job, max tai may)",672,heuristic (co lich kem theo),597,597,True,OPTIMAL,1,6.77,40.4
+2026-11-13 15:42:28,la04,10,5,gurobi,gurobi-t1,537,"don gian (max job, max tai may)",673,heuristic (co lich kem theo),590,590,True,OPTIMAL,1,2.35,37.9
+2026-11-13 15:42:28,la05,10,5,gurobi,gurobi-t1,593,"don gian (max job, max tai may)",593,heuristic (co lich kem theo),593,593,True,OPTIMAL,0,0.01,
+2026-11-13 15:43:47,ft10,10,10,gurobi,gurobi-t1,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,1,78.41,58.7
+2026-11-13 15:46:38,la06,15,5,gurobi,gurobi-t1,926,"don gian (max job, max tai may)",926,heuristic (co lich kem theo),926,926,True,OPTIMAL,0,0.02,
+2026-11-13 15:46:42,la11,20,5,gurobi,gurobi-t1,1222,"don gian (max job, max tai may)",1227,heuristic (co lich kem theo),1222,1222,True,OPTIMAL,1,3.93,47.2
+2026-11-13 15:46:48,la16,10,10,gurobi,gurobi-t1,717,"don gian (max job, max tai may)",1054,heuristic (co lich kem theo),945,945,True,OPTIMAL,1,5.91,42.5
+2026-11-13 16:01:49,la21,15,10,gurobi,gurobi-t1,935,"don gian (max job, max tai may)",1249,heuristic (co lich kem theo),935,1065,False,TIMEOUT,1,901.76,91.6
+2026-11-13 16:03:24,abz5,10,10,gurobi,gurobi-t1,868,"don gian (max job, max tai may)",1352,heuristic (co lich kem theo),1234,1234,True,OPTIMAL,1,94.59,48.4
+2026-11-13 16:03:27,abz6,10,10,gurobi,gurobi-t1,742,"don gian (max job, max tai may)",987,heuristic (co lich kem theo),943,943,True,OPTIMAL,1,3.18,39.8
+2026-11-13 16:18:28,orb01,10,10,gurobi,gurobi-t1,695,"don gian (max job, max tai may)",1200,heuristic (co lich kem theo),904,1059,False,TIMEOUT,1,900.5,70.6
+2026-11-13 17:46:49,abz7,20,15,gurobi,gurobi-t1,556,"don gian (max job, max tai may)",769,heuristic (co lich kem theo),556,685,False,TIMEOUT,1,3601.74,119.5
+2026-11-13 18:46:51,abz8,20,15,gurobi,gurobi-t1,566,"don gian (max job, max tai may)",805,heuristic (co lich kem theo),566,712,False,TIMEOUT,1,3601.49,179.5
+2026-11-13 19:46:52,abz9,20,15,gurobi,gurobi-t1,563,"don gian (max job, max tai may)",834,heuristic (co lich kem theo),563,719,False,TIMEOUT,1,3600.88,183.7
+2026-11-13 21:19:37,yn1,20,20,gurobi,gurobi-t1,694,"don gian (max job, max tai may)",1005,heuristic (co lich kem theo),694,1005,False,TIMEOUT,1,5565.2,134.6
+2026-11-14 17:59:59,yn1,20,20,gurobi,gurobi-t1,694,"don gian (max job, max tai may)",1005,heuristic (co lich kem theo),753,904,False,TIMEOUT,1,3601.29,228.8
+2026-11-14 20:23:15,ft06,6,6,cpo,cpo-w1,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,1,3.18,94.2
+2026-11-14 20:23:17,la01,10,5,cpo,cpo-w1,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,1,1.47,95.3
+2026-11-14 20:23:45,ft06,6,6,cplex,cplex-t1,47,"don gian (max job, max tai may)",59,heuristic (co lich kem theo),55,55,True,OPTIMAL,1,0.44,33.6
+2026-11-14 20:23:46,la01,10,5,cplex,cplex-t1,666,"don gian (max job, max tai may)",710,heuristic (co lich kem theo),666,666,True,OPTIMAL,1,0.8,37.4
+2026-11-14 20:24:27,abz5,10,10,cplex,cplex-t1,868,"don gian (max job, max tai may)",1352,heuristic (co lich kem theo),1077,1240,False,TIMEOUT,1,10.32,45.9
+2026-11-14 20:25:04,abz5,10,10,cpo,cpo-w1,868,"don gian (max job, max tai may)",1352,heuristic (co lich kem theo),1234,1234,True,OPTIMAL,1,2.89,97.5
+2026-11-14 20:28:24,la02,10,5,cpo,cpo-w1,635,"don gian (max job, max tai may)",729,heuristic (co lich kem theo),655,655,True,OPTIMAL,1,1.28,96.4
+2026-11-14 20:28:52,la02,10,5,cplex,cplex-t1,635,"don gian (max job, max tai may)",729,heuristic (co lich kem theo),655,655,True,OPTIMAL,1,27.43,42.0
+2026-11-14 20:28:52,la03,10,5,cpo,cpo-w1,588,"don gian (max job, max tai may)",672,heuristic (co lich kem theo),597,597,True,OPTIMAL,1,0.84,95.7
+2026-11-14 20:29:00,la03,10,5,cplex,cplex-t1,588,"don gian (max job, max tai may)",672,heuristic (co lich kem theo),597,597,True,OPTIMAL,1,7.22,42.4
+2026-11-14 20:29:01,la04,10,5,cpo,cpo-w1,537,"don gian (max job, max tai may)",673,heuristic (co lich kem theo),590,590,True,OPTIMAL,1,0.91,95.9
+2026-11-14 20:29:03,la04,10,5,cplex,cplex-t1,537,"don gian (max job, max tai may)",673,heuristic (co lich kem theo),590,590,True,OPTIMAL,1,2.54,42.9
+2026-11-14 20:29:03,la05,10,5,cpo,cpo-w1,593,"don gian (max job, max tai may)",593,heuristic (co lich kem theo),593,593,True,OPTIMAL,0,0.01,
+2026-11-14 20:29:03,la05,10,5,cplex,cplex-t1,593,"don gian (max job, max tai may)",593,heuristic (co lich kem theo),593,593,True,OPTIMAL,0,0.01,
+2026-11-14 20:29:08,ft10,10,10,cpo,cpo-w1,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,1,4.43,98.1
+2026-11-14 20:31:35,ft10,10,10,cplex,cplex-t1,655,"don gian (max job, max tai may)",1074,heuristic (co lich kem theo),930,930,True,OPTIMAL,1,147.32,51.4
+2026-11-14 22:40:46,la06,15,5,cpo,cpo-w1,926,"don gian (max job, max tai may)",926,heuristic (co lich kem theo),926,926,True,OPTIMAL,0,0.01,
+2026-11-14 22:40:46,la06,15,5,cplex,cplex-t1,926,"don gian (max job, max tai may)",926,heuristic (co lich kem theo),926,926,True,OPTIMAL,0,0.02,
+2026-11-14 22:40:49,la11,20,5,cpo,cpo-w1,1222,"don gian (max job, max tai may)",1227,heuristic (co lich kem theo),1222,1222,True,OPTIMAL,1,2.75,95.7
+2026-11-14 22:42:19,la11,20,5,cplex,cplex-t1,1222,"don gian (max job, max tai may)",1227,heuristic (co lich kem theo),1222,1222,True,OPTIMAL,1,90.21,55.6
+2026-11-14 22:42:21,la16,10,10,cpo,cpo-w1,717,"don gian (max job, max tai may)",1054,heuristic (co lich kem theo),945,945,True,OPTIMAL,1,1.48,97.3
+2026-11-14 22:42:31,la16,10,10,cplex,cplex-t1,717,"don gian (max job, max tai may)",1054,heuristic (co lich kem theo),945,945,True,OPTIMAL,1,9.7,45.0
+2026-11-14 22:43:08,la21,15,10,cpo,cpo-w1,935,"don gian (max job, max tai may)",1249,heuristic (co lich kem theo),1046,1046,True,OPTIMAL,1,37.52,99.8
+2026-11-14 22:58:09,la21,15,10,cplex,cplex-t1,935,"don gian (max job, max tai may)",1249,heuristic (co lich kem theo),935,1082,False,TIMEOUT,1,900.99,87.2
+2026-11-14 22:58:12,abz6,10,10,cpo,cpo-w1,742,"don gian (max job, max tai may)",987,heuristic (co lich kem theo),943,943,True,OPTIMAL,1,2.73,97.0
+2026-11-14 22:58:15,abz6,10,10,cplex,cplex-t1,742,"don gian (max job, max tai may)",987,heuristic (co lich kem theo),943,943,True,OPTIMAL,1,2.84,41.7
+2026-11-14 22:58:31,orb01,10,10,cpo,cpo-w1,695,"don gian (max job, max tai may)",1200,heuristic (co lich kem theo),1059,1059,True,OPTIMAL,1,16.24,98.9
+2026-11-14 23:13:32,orb01,10,10,cplex,cplex-t1,695,"don gian (max job, max tai may)",1200,heuristic (co lich kem theo),909,1064,False,TIMEOUT,1,900.75,70.9
+2026-11-15 23:22:28,abz5,10,10,cplex,cplex-t1,868,"don gian (max job, max tai may)",1352,heuristic (co lich kem theo),1234,1234,True,OPTIMAL,1,25.62,46.1
+2026-11-15 23:44:50,abz7,20,15,cpo,cpo-w1,556,"don gian (max job, max tai may)",769,heuristic (co lich kem theo),656,656,True,OPTIMAL,1,1301.78,103.7
+2026-11-16 00:44:53,abz7,20,15,cplex,cplex-t1,556,"don gian (max job, max tai may)",769,heuristic (co lich kem theo),556,721,False,TIMEOUT,1,3602.9,172.6
+2026-11-16 01:44:56,abz8,20,15,cpo,cpo-w1,566,"don gian (max job, max tai may)",805,heuristic (co lich kem theo),613,678,False,TIMEOUT,1,3603.03,105.2
+2026-11-16 02:44:58,abz8,20,15,cplex,cplex-t1,566,"don gian (max job, max tai may)",805,heuristic (co lich kem theo),566,739,False,TIMEOUT,1,3601.78,244.4
+2026-11-16 15:05:27,abz9,20,15,cpo,cpo-w1,563,"don gian (max job, max tai may)",834,heuristic (co lich kem theo),656,682,False,TIMEOUT,1,3604.46,104.1
+2026-11-16 16:05:30,abz9,20,15,cplex,cplex-t1,563,"don gian (max job, max tai may)",834,heuristic (co lich kem theo),563,724,False,TIMEOUT,1,3602.27,109.1
+2026-11-16 17:05:33,yn1,20,20,cpo,cpo-w1,694,"don gian (max job, max tai may)",1005,heuristic (co lich kem theo),812,897,False,TIMEOUT,1,3603.32,105.4
+2026-11-16 18:05:35,yn1,20,20,cplex,cplex-t1,694,"don gian (max job, max tai may)",1005,heuristic (co lich kem theo),763,950,False,TIMEOUT,1,3602.11,129.9
+2026-11-17 17:23:49,abz7,20,15,hybrid_C,cadical153+cpsat-w1,556,hop nhat: SAT tu CP-SAT 650,769,heuristic 769 -> CP-SAT 720s: 674,650,674,False,TIMEOUT,0,3600.13,1160.7

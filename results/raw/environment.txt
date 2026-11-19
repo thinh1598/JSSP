@@ -16,3 +16,139 @@ pysat: 1.9.dev17
 ortools: 9.15.6755
 psutil: 7.2.2
 ---
+thoi diem: 2026-11-09 14:02:05
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+psutil: 7.2.2
+---
+thoi diem: 2026-11-09 14:56:58
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+psutil: 7.2.2
+---
+thoi diem: 2026-11-13 15:42:06
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+psutil: 7.2.2
+---
+thoi diem: 2026-11-13 15:46:37
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+psutil: 7.2.2
+---
+thoi diem: 2026-11-13 16:46:47
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+psutil: 7.2.2
+---
+thoi diem: 2026-11-14 16:59:57
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-14 20:28:23
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-14 22:40:46
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-15 23:22:02
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-15 23:23:08
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-16 14:05:22
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-17 15:02:58
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---
+thoi diem: 2026-11-17 16:35:46
+he dieu hanh: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 154 Stepping 3, GenuineIntel | so luong logic: 16
+python: 3.13.11
+RAM: 7.7 GB
+pysat: 1.9.dev17
+ortools: 9.15.6755
+gurobipy: 14.0.0
+docplex: 2.32.264
+psutil: 7.2.2
+---

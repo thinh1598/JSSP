@@ -1,0 +1,20 @@
+| instance | size | best_lb | best_lb_by | best_ub | best_ub_by | proven_optimal | fastest_proof |
+|---|---|---|---|---|---|---|---|
+| ft06 | 6x6 | 55 | (da toi uu) | 55 | (da toi uu) | True | Inc. SAT giam dan 0.2s |
+| la01 | 10x5 | 666 | (da toi uu) | 666 | (da toi uu) | True | Gurobi MIP 0.7s |
+| la02 | 10x5 | 655 | (da toi uu) | 655 | (da toi uu) | True | CP Optimizer 1.3s |
+| la03 | 10x5 | 597 | (da toi uu) | 597 | (da toi uu) | True | CP Optimizer 0.8s |
+| la04 | 10x5 | 590 | (da toi uu) | 590 | (da toi uu) | True | CP Optimizer 0.9s |
+| la05 | 10x5 | 593 | (da toi uu) | 593 | (da toi uu) | True | SAT giam dan 0.0s |
+| ft10 | 10x10 | 930 | (da toi uu) | 930 | (da toi uu) | True | CP Optimizer 4.4s |
+| la06 | 15x5 | 926 | (da toi uu) | 926 | (da toi uu) | True | CP Optimizer 0.0s |
+| la11 | 20x5 | 1222 | (da toi uu) | 1222 | (da toi uu) | True | CP-SAT 2.1s |
+| la16 | 10x10 | 945 | (da toi uu) | 945 | (da toi uu) | True | CP Optimizer 1.5s |
+| la21 | 15x10 | 1046 | (da toi uu) | 1046 | (da toi uu) | True | CP Optimizer 37.5s |
+| abz5 | 10x10 | 1234 | (da toi uu) | 1234 | (da toi uu) | True | CP Optimizer 2.9s |
+| abz6 | 10x10 | 943 | (da toi uu) | 943 | (da toi uu) | True | CP Optimizer 2.7s |
+| orb01 | 10x10 | 1059 | (da toi uu) | 1059 | (da toi uu) | True | CP Optimizer 16.2s |
+| abz7 | 20x15 | 656 | (da toi uu) | 656 | (da toi uu) | True | CP Optimizer 1301.8s |
+| abz8 | 20x15 | 626 | Inc. SAT | 678 | CP Optimizer | False |  |
+| abz9 | 20x15 | 656 | CP Optimizer | 682 | CP Optimizer | False |  |
+| yn1 | 20x20 | 850 | Inc. SAT | 897 | CP Optimizer | False |  |

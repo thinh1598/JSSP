@@ -1,0 +1,4 @@
+Doc 129 o (da bo 10 dong cu bi chay lai de len).
+Tong so muc LOI: 0, CANH BAO: 1
+
+CANH BAO: abz7/hybrid_C/cadical153+cpsat-w1: chay 5486s, vuot ngan sach 3600s (may ngu? nen chay lai bang --force)

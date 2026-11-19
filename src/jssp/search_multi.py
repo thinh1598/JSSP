@@ -63,6 +63,7 @@ class SearchResult:
     total_time: float
     best_starts: Optional[List[List[int]]]
     calls: List[Dict] = field(default_factory=list)
+    peak_mem_mb: Optional[float] = None      # bo nho dinh (neu do duoc)
 
 
 def _call(path: Path, L: int, solver: str, tiny: bool, timeout: float, mem_limit_mb: Optional[float]) -> Dict:
@@ -86,19 +87,23 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
            ub: Optional[int] = None, per_call_timeout: float = 600, total_timeout: float = 3600,
            mem_limit_mb: Optional[float] = None, tiny: bool = False, calls_log: Optional[CsvLog] = None,
            summary_log: Optional[CsvLog] = None, save_dir: Optional[Path] = None,
-           verbose: bool = True) -> SearchResult:
+           verbose: bool = True, init_starts: Optional[List[List[int]]] = None, tag: Optional[str] = None,
+           lb_label: Optional[str] = None, ub_label: Optional[str] = None) -> SearchResult:
+    """init_starts: lich HOP LE co san (vd. tu CP-SAT) dung lam can tren, khong ton lan giai xac nhan.
+    tag: ten ghi o cot 'method' (mac dinh = method). lb_label / ub_label: ghi chu nguon can ban dau."""
     if method not in ("descent", "binary", "inc_descent", "inc_binary"):
         raise ValueError("method phai la 'descent', 'binary', 'inc_descent' hoac 'inc_binary'")
+    mlabel = tag or method
     path = Path(path)
     inst: JSSPInstance = read_instance(path)
     t_start = time.perf_counter()
     calls: List[Dict] = []
     state = {"lo": lb if lb is not None else inst.trivial_lower_bound(), "hi": None, "starts": None}
-    lb_source = "tham so" if lb is not None else "don gian (max job, max tai may)"
+    lb_source = lb_label or ("tham so" if lb is not None else "don gian (max job, max tai may)")
     status = "OPTIMAL"
 
     def log_call(d: Dict) -> None:
-        d.update(timestamp=time.strftime("%Y-%m-%d %H:%M:%S"), instance=inst.name, method=method,
+        d.update(timestamp=time.strftime("%Y-%m-%d %H:%M:%S"), instance=inst.name, method=mlabel,
                  solver="DPLL-tiny" if tiny else solver, call_idx=len(calls) + 1,
                  lb_after=state["lo"], ub_after=state["hi"])
         calls.append(d)
@@ -107,7 +112,7 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
         if verbose:
             mk = f" (makespan {d['makespan']})" if d.get("makespan") is not None else ""
             mem = f"  {d['peak_mem_mb']:.0f}MB" if d.get("peak_mem_mb") is not None else ""
-            print(f"[{method}] goi {d['call_idx']}: L={d['L']} -> {d['status']}{mk}  {d['wall_time']:.1f}s{mem}"
+            print(f"[{mlabel}] goi {d['call_idx']}: L={d['L']} -> {d['status']}{mk}  {d['wall_time']:.1f}s{mem}"
                   f"   | LB={state['lo']} UB={state['hi']}", flush=True)
 
     def do_call(L: int) -> Dict:
@@ -128,12 +133,20 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
         return False
 
     # ---- can tren ban dau
-    if ub is None:
+    if init_starts is not None:                  # lich co san (vd. tu CP-SAT): kiem tra roi dung, khong ton lan giai
+        errs = validate_schedule(inst, init_starts)
+        if errs:
+            raise ValueError("init_starts khong hop le: " + "; ".join(errs[:3]))
+        greedy = best_greedy(inst)               # lay lich tot hon trong (lich ngoai, heuristic)
+        state["starts"] = min((init_starts, greedy), key=lambda x: makespan(inst, x))
+        state["hi"] = makespan(inst, state["starts"])
+        ub_source = ub_label or "lich ben ngoai (da kiem tra)"
+    elif ub is None:
         state["starts"] = best_greedy(inst)
         state["hi"] = makespan(inst, state["starts"])
-        ub_source = "heuristic (co lich kem theo)"
+        ub_source = ub_label or "heuristic (co lich kem theo)"
     else:
-        ub_source = "tham so (da xac nhan bang 1 lan giai)"
+        ub_source = ub_label or "tham so (da xac nhan bang 1 lan giai)"
         state["hi"] = ub
         d = do_call(ub)
         if not (d["status"] == "SAT" and accept_schedule(d)):
@@ -202,15 +215,16 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
 
     total = time.perf_counter() - t_start
     optimal = status == "OPTIMAL" and state["hi"] is not None and state["lo"] == state["hi"]
-    res = SearchResult(inst.name, method, "DPLL-tiny" if tiny else solver, state["lo"],
+    res = SearchResult(inst.name, mlabel, "DPLL-tiny" if tiny else solver, state["lo"],
                        state["hi"] if state["hi"] is not None else -1, optimal, status, len(calls), total,
                        state["starts"], calls)
     peaks = [c["peak_mem_mb"] for c in calls if c.get("peak_mem_mb") is not None]
     if extra["peak"] is not None:
         peaks.append(extra["peak"])       # incremental: bo nho dinh cua CA phien (khong tach duoc tung lan hoi)
+    res.peak_mem_mb = max(peaks) if peaks else None
     if summary_log:
         summary_log.append({"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "instance": inst.name,
-                            "n_jobs": inst.n_jobs, "n_machines": inst.n_machines, "method": method,
+                            "n_jobs": inst.n_jobs, "n_machines": inst.n_machines, "method": mlabel,
                             "solver": res.solver, "lb_init": lb_init, "lb_source": lb_source, "ub_init": ub_init,
                             "ub_source": ub_source, "lb_final": res.lb, "ub_final": res.ub, "optimal": optimal,
                             "status": status, "n_calls": len(calls), "total_time": round(total, 2),
@@ -218,7 +232,7 @@ def search(path, method: str = "binary", solver: str = "cadical153", lb: Optiona
     if save_dir and state["starts"]:
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
-        (save_dir / f"{inst.name}_{method}_{res.solver}.json").write_text(
+        (save_dir / f"{inst.name}_{mlabel}_{res.solver}.json").write_text(
             json.dumps({"instance": inst.name, "makespan": res.ub, "optimal": optimal, "lb": res.lb,
                         "starts": state["starts"]}), encoding="utf-8")
     return res

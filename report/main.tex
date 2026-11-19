@@ -1,0 +1,325 @@
+\documentclass[a4paper,fleqn]{cas-sc}
+
+\usepackage[authoryear,longnamesfirst]{natbib}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+
+% ---- markers for things that must be filled in / double-checked before submission ----
+\newcommand{\todo}[1]{{\color{red}[TODO: #1]}}
+\newcommand{\verify}[1]{{\color{red}#1}\footnote{\color{red}To be verified against the literature before submission.}}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+
+\newcommand{\pr}{\mathit{pr}}
+\newcommand{\sa}{\mathit{sa}}
+\newcommand{\eb}{\mathit{eb}}
+\newcommand{\Cmax}{C_{\max}}
+
+\begin{document}
+
+\shorttitle{SAT Encoding for the Job-Shop Scheduling Problem}
+\shortauthors{Author One et~al.}
+
+\title[mode=title]{Exact SAT Solving for the Job-Shop Scheduling Problem: Incremental Search and a Comparison with CP and MIP Solvers}
+
+\author[1]{Author One}
+\author[1]{Author Two}
+\author[1]{Author Three}
+\cormark[1]
+\cortext[cor1]{Corresponding author}
+\address[1]{Faculty of Information Technology, VNU University of Engineering and Technology, Hanoi, Vietnam \todo{authors, e-mails, ORCID}}
+
+\begin{abstract}
+The job-shop scheduling problem (JSSP) asks for a schedule of minimum makespan in which every job visits its machines in a prescribed order and every machine processes one operation at a time.
+We implement the SAT encoding of Crawford and Baker as used by Koshimura et al.\ for open JSSP instances, add one boundary rule needed for sound decoding, and solve the resulting decision problems with CaDiCaL through PySAT.
+Two search schemes are compared: repeated SAT calls, where each makespan threshold is encoded from scratch, and incremental SAT, where the formula is encoded once and the threshold is imposed through solver assumptions.
+Under identical conditions (single thread, same initial bounds, a per-instance wall-clock limit of 600, 900 and 3600\,s for small, medium and large instances), we compare both with CP-SAT, CP Optimizer, Gurobi and CPLEX MIP on 16 non-trivial benchmark instances up to $20\times20$.
+Incremental SAT is $1.5$--$28$ times faster than repeated SAT on every instance that both solve, and it gives the best lower bounds on two of the four large instances (abz8, yn1).
+CP Optimizer, however, is the strongest method overall: it solves 13 of 16 instances, including abz7 (optimal makespan 656 in 1302\,s), and gives the best upper bound on all four large instances.
+The two MIP solvers are competitive only on small instances and give weak lower bounds on hard ones.
+All results are single runs on one machine.
+\end{abstract}
+
+\begin{keywords}
+job-shop scheduling \sep SAT encoding \sep incremental SAT \sep constraint programming \sep exact optimization
+\end{keywords}
+
+\maketitle
+
+%=====================================================================
+\section{Introduction}
+%=====================================================================
+Job-shop scheduling is a classical NP-hard problem \citep{garey1976}: given $n$ jobs, each an ordered chain of operations on prescribed machines, find start times that minimize the completion time of the last operation (the makespan) while no machine processes two operations simultaneously.
+Even small instances are hard: the $10\times10$ instance ft10 of \citet{fisher1963} was a long-standing challenge, and the $20\times15$ instances of \citet{adams1988} are still hard for exact methods (our own runs close only one of them).
+
+Satisfiability (SAT) solving offers a route to \emph{exact} answers: an optimization problem is turned into a sequence of decision questions ``is there a schedule with makespan at most $L$?'', each encoded as a Boolean formula.
+This idea goes back to \citet{crawford1994} and was used by \citet{koshimura2010} to close open instances.
+Their study ran on a sequential MiniSat in 2010 and reports one encoding.
+Since then, CDCL solvers and incremental interfaces have improved, and strong CP and MIP solvers have become widely available.
+
+This paper asks how a modern implementation of that SAT approach compares with other exact methods.
+Our contributions are:
+\begin{itemize}
+  \item an implementation of the Crawford--Koshimura encoding with PySAT \citep{ignatiev2018} and CaDiCaL \citep{biere2020}, including a boundary rule (R9) that we found necessary for sound decoding (Section~\ref{sec:enc} and Appendix~B);
+  \item two search schemes, repeated SAT and \emph{incremental} SAT with assumptions, with a proof that the assumption-based threshold is equivalent to re-encoding (Appendix~A);
+  \item a controlled comparison with CP-SAT \citep{ortools}, CP Optimizer \citep{laborie2018}, Gurobi \citep{gurobi} and CPLEX MIP \citep{cplex}, in which all methods start from the same bounds, use one thread, and have every returned schedule re-validated by an independent checker;
+  \item an empirical study on 16 non-trivial benchmark instances, up to $20\times20$, with honest reporting of what is and is not established.
+\end{itemize}
+
+The rest of the paper is organized as follows.
+Section~\ref{sec:background} defines the problem and the competing formulations.
+Section~\ref{sec:enc} presents the encoding and the search schemes.
+Section~\ref{sec:exp} reports the experiments, and Section~\ref{sec:concl} concludes.
+
+%=====================================================================
+\section{Background}\label{sec:background}
+%=====================================================================
+\subsection{Problem definition}
+An instance consists of $n$ jobs. Job $l$ is a sequence of operations $O_{l,1},\dots,O_{l,q_l}$; operation $a=O_{l,i}$ needs machine $\mu(a)$ for $p_a>0$ consecutive time units.
+A schedule assigns a start time $s_a\ge0$ to every operation such that
+(i) $s_{O_{l,i+1}}\ge s_{O_{l,i}}+p_{O_{l,i}}$ for consecutive operations of a job, and
+(ii) for two operations $a\neq b$ on the same machine, $s_a+p_a\le s_b$ or $s_b+p_b\le s_a$.
+The makespan is $\Cmax=\max_a (s_a+p_a)$, and the goal is to minimize it.
+
+For operation $a=O_{l,i}$ define its \emph{head} $h_a=\sum_{u<i}p_{O_{l,u}}$ and \emph{tail} $\tau_a=\sum_{u>i}p_{O_{l,u}}$.
+Every schedule satisfies $s_a\ge h_a$ and $s_a+p_a+\tau_a\le \Cmax$.
+A simple lower bound is $\mathrm{LB}_0=\max\{\max_l\sum_i p_{O_{l,i}},\ \max_k \sum_{\mu(a)=k}p_a\}$, the longest job or the most loaded machine.
+An upper bound $\mathrm{UB}_0$ comes from a priority-rule dispatcher (most work remaining, shortest and longest processing time, plus 30 random tie-breaking runs); the schedule behind $\mathrm{UB}_0$ is kept and validated.
+
+\subsection{Competing formulations}
+\paragraph{MIP (big-M).}
+Following \citet{manne1960}, we use integer start variables $s_a\in[h_a,\ \mathrm{UB}_0-\tau_a-p_a]$ and a makespan variable $\Cmax\in[\mathrm{LB}_0,\mathrm{UB}_0]$.
+For every pair $a,b$ of operations on one machine belonging to different jobs, a binary $y_{ab}$ equals~1 iff $a$ precedes $b$:
+\begin{align}
+ s_b - s_a &\ge p_a - M_{ab}(1-y_{ab}), \label{eq:mip1}\\
+ s_a - s_b &\ge p_b - M_{ba}\,y_{ab}, \label{eq:mip2}
+\end{align}
+with $M_{ab}=\mathrm{hi}_a+p_a-\mathrm{lo}_b$ and $M_{ba}=\mathrm{hi}_b+p_b-\mathrm{lo}_a$, where $[\mathrm{lo},\mathrm{hi}]$ is the start-time domain of each operation.
+Job precedence and $s_a+p_a\le\Cmax$ for last operations are linear.
+The same model is given to Gurobi and to CPLEX MIP.
+
+\paragraph{CP (interval variables).}
+CP-SAT and CP Optimizer receive a fixed-duration interval variable per operation, end-before-start constraints inside jobs, a no-overlap constraint per machine and the same bounds on $\Cmax$.
+CP-SAT is part of OR-Tools \citep{ortools}; CP Optimizer is described by \citet{laborie2018}.
+
+\subsection{Related work}
+\citet{crawford1994} showed that scheduling problems can be solved through SAT by encoding start-time thresholds and precedence variables, and compared several encodings.
+\citet{koshimura2010} used a variant of this encoding with MiniSat to close open instances; as we read their report, abz9 and yn1 were solved to optimality (makespans 678 and 884) and lower bounds were improved for abz8 and the yn2--yn4 instances.
+Their approach solves one formula per makespan threshold.
+Incremental SAT with assumptions \citep{een2003temporal} lets a solver reuse learned clauses across related queries, which is the natural fit for threshold search; we evaluate that fit empirically.
+CP Optimizer \citep{laborie2018} and CP-SAT \citep{ortools} are dedicated constraint solvers with specialised scheduling propagation, and MIP solvers solve the big-M model above by branch-and-cut.
+
+%=====================================================================
+\section{SAT-based exact approach}\label{sec:enc}
+%=====================================================================
+\subsection{Encoding}
+Fix a threshold $L$ and let $\mathcal O$ be the set of operations, $N=|\mathcal O|$.
+Time points are $t\in\{0,\dots,L\}$.
+The formula $F_L$ uses three kinds of Boolean variables:
+$\pr_{a,b}$ (``$a$ precedes $b$'', for consecutive operations of a job and for pairs on one machine from different jobs),
+$\sa_{a,t}$ (``$a$ starts at time $\ge t$'') and
+$\eb_{a,t}$ (``$a$ ends at time $\le t$'').
+Its clauses are:
+\begin{align*}
+&\text{R1: } \pr_{a,b} && a,b \text{ consecutive in a job}\\
+&\text{R2: } \pr_{a,b}\vee\pr_{b,a} && \mu(a)=\mu(b),\ \text{different jobs}\\
+&\text{R3: } \sa_{a,h_a}, \qquad \text{R4: } \eb_{a,L-\tau_a} && a\in\mathcal O\\
+&\text{R5: } \sa_{a,t}\to\sa_{a,t-1} && 1\le t\le L\\
+&\text{R6: } \eb_{a,t}\to\eb_{a,t+1} && 0\le t<L\\
+&\text{R7: } \sa_{a,t}\to\neg\eb_{a,t+p_a-1} && 0\le t\le L-p_a\\
+&\text{R8: } \sa_{a,t}\wedge\pr_{a,b}\to\sa_{b,t+p_a} && 0\le t\le L-p_a\\
+&\text{R9: } \neg\sa_{a,t} && L-p_a< t\le L
+\end{align*}
+R1--R8 follow \citet{koshimura2010}. R9 is our addition: R7 and R8 are generated only for $t\le L-p_a$, so with the index ranges above nothing forbids $\sa_{a,t}$ for $t>L-p_a$, and on a hand-made $2\times2$ instance with optimum~7 they admit a model for $L=6$ whose decoded schedule has makespan~7 (Appendix~B).
+R9 only states the obvious semantics (``start $>L-p_a$'' is impossible), so it removes no valid schedule.
+The encoding has no cardinality constraints, so AMO/ALO encodings do not apply to this problem.
+A model is decoded by $s_a=\max\{t:\sa_{a,t}\text{ true}\}$, and every decoded schedule is passed through an independent validator.
+
+\paragraph{Size.}
+The number of variables is $n_{\pr}+2N(L+1)$, where $n_{\pr}$ counts the precedence variables.
+Increasing $L$ by one adds $2N$ variables and $3N+n_{\pr}$ clauses (R5, R6, R7 contribute $N$ each, R8 contributes $n_{\pr}$), so the CNF grows linearly in $L$.
+
+\subsection{Search schemes}
+Let $lo$ be the largest threshold proven infeasible plus one (initially $\mathrm{LB}_0$) and $hi$ the makespan of the best known schedule (initially $\mathrm{UB}_0$).
+Each SAT answer shrinks $[lo,hi]$: a satisfiable $L$ gives a schedule of makespan $\le L$, an unsatisfiable $L$ proves $lo>L$.
+Two rules choose the next $L$: \emph{descent} ($L=hi-1$) and \emph{bisection} ($L=\lfloor(lo+hi)/2\rfloor$).
+The search stops with a certified optimum when $lo=hi$; on timeout, the interval $[lo,hi]$ is reported.
+
+\paragraph{Repeated SAT.} Each query builds $F_L$ and a fresh solver.
+
+\paragraph{Incremental SAT.}
+$F_H$ is built \emph{once} for $H=hi$ and one CaDiCaL instance is kept.
+The query for $L\le H$ is answered under the assumptions
+\begin{equation}
+  \mathcal A_L=\{\eb_{a,L-\tau_a}: a\in\mathcal O\},
+\end{equation}
+which is exactly R4 for threshold $L$.
+Appendix~A shows that $F_H\wedge\mathcal A_L$ is satisfiable iff a schedule of makespan $\le L$ exists, so clauses learned under one $L$ remain valid for all others.
+The price is that the formula is built at the larger $H$.
+
+\subsection{Hybrid warm-up (exploratory)}
+Because CP solvers are good at finding schedules and SAT at proving bounds, we also test a hybrid in which CP-SAT runs for 20\% of the budget; its bounds and schedule then start the incremental SAT search with the remaining 80\% (Hybrid~B: only the upper bound is passed on; Hybrid~C: both bounds).
+Warm-up time is included in the total, and the final interval is the intersection of both results.
+
+%=====================================================================
+\section{Computational experiments}\label{sec:exp}
+%=====================================================================
+\subsection{Setup}
+\paragraph{Instances.}
+We use standard benchmark files: ft06 and ft10 \citep{fisher1963}; la01--la21 \citep{lawrence1984}; abz5--abz9 \citep{adams1988}; orb01 \citep{applegate1991}; yn1 \citep{yamada1992}.
+The 18 instances are split in three tiers with a per-run wall-clock limit:
+\emph{small} (ft06, la01--la05, ft10; 600\,s),
+\emph{medium} (la06, la11, la16, la21, abz5, abz6, orb01; 900\,s), and
+\emph{large} (abz7--abz9, $20\times15$, and yn1, $20\times20$; 3600\,s).
+Instances la05 and la06 are solved by the initial bounds alone ($\mathrm{LB}_0=\mathrm{UB}_0$) and are excluded from all aggregates, leaving 16 instances.
+Instances yn2--yn4 were not run for lack of time.
+
+\paragraph{Fair protocol.}
+Every method (i) starts from the same $\mathrm{LB}_0$ and $\mathrm{UB}_0$, (ii) uses one thread (CaDiCaL is sequential; CP-SAT \texttt{num\_workers}=1; CP Optimizer \texttt{Workers}=1; Gurobi \texttt{Threads}=1; CPLEX \texttt{threads}=1), (iii) runs in its own subprocess with the same wall-clock limit, including encoding time, and a memory limit, and (iv) has every schedule it returns re-validated by the parent process before a bound is accepted.
+MIP gaps are set to zero, and a MIP bound is rounded up to an integer with tolerance $10^{-4}$.
+Random seeds are fixed to~0.
+Each cell is run \emph{once}.
+SAT runs use CaDiCaL 1.5.3 (\texttt{cadical153}) in PySAT; the other solvers are OR-Tools CP-SAT, IBM CP Optimizer and CPLEX MIP from CPLEX Studio 22.2.0 (CP Optimizer through \texttt{docplex.cp}, CPLEX MIP through its interactive optimizer on an LP file), and Gurobi 14.0.0 with an academic license.
+Hardware and library versions: \todo{CPU model, RAM, OS (Windows laptop), Python, PySAT and OR-Tools versions; memory limit used}.
+
+\paragraph{Reporting.}
+For each run we report either the time to a proven optimum or the proven interval $[\mathrm{LB},\mathrm{UB}]$ at the time limit.
+We also report PAR2 (unsolved runs count as twice the limit), and the mean relative gap $(\mathrm{UB}-\mathrm{LB})/\mathrm{LB}$ over unsolved runs.
+Consistency checks across all methods found no contradiction (no lower bound above any upper bound on any instance, and all methods that report an optimum agree).
+
+\subsection{Small and medium instances}
+\input{tables/main_wrap.tex}
+
+Table~\ref{tab:main} gives all results and Figure~\ref{fig:times} the times for the small and medium tiers.
+On the small tier every method solves all six non-trivial instances (Table~\ref{tab:summary}).
+CP Optimizer has the lowest PAR2 (2.0\,s), followed by incremental SAT (6.4\,s), CP-SAT (8.8\,s), repeated SAT with bisection (16.3\,s), Gurobi (17.0\,s) and CPLEX MIP (31.0\,s).
+On ft10 the times are 4.4\,s (CP Optimizer), 24.9\,s (incremental SAT), 39.7\,s (CP-SAT), 67.0\,s (repeated SAT), 78.4\,s (Gurobi) and 147.3\,s (CPLEX).
+Incremental SAT is the fastest on ft06 and CPLEX or Gurobi on small instances such as la01, so the ranking is not uniform.
+
+On the medium tier CP Optimizer solves all six non-trivial instances, CP-SAT five, and all other methods four.
+Only CP Optimizer proves la21 (1046 in 37.5\,s).
+On orb01, CP Optimizer needs 16.2\,s and CP-SAT 555.8\,s; the other four methods time out, with repeated SAT reaching [1052, 1059].
+On the unsolved medium runs the mean gap is 3.4\% (incremental SAT), 1.3\% (repeated SAT), 1.3\% (CP-SAT), 15.5\% (Gurobi) and 16.4\% (CPLEX MIP).
+The large MIP gaps come from lower bounds that stay at the initial bound (935 on la21 for both MIP solvers), whereas SAT and CP-SAT reach 1014--1034.
+A plausible, untested explanation is the weak linear relaxation of the big-M constraints.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/times_small_medium.pdf}
+  \caption{Time to optimality on small and medium instances (log scale); a cross marks a run that reached the time limit.}\label{fig:times}
+\end{figure}
+
+\input{tables/summary_wrap.tex}
+
+Memory differs by family (Table~\ref{tab:summary}): the MIP solvers average 42--58\,MB, CP solvers 91--98\,MB and SAT 162--553\,MB on the small and medium tiers, rising to about 1.5\,GB for SAT on the large tier.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/cactus.pdf}
+  \caption{Cactus plot: instances proven optimal (small, medium and large tiers together) against time.}\label{fig:cactus}
+\end{figure}
+
+Figure~\ref{fig:cactus} summarizes the three tiers: CP Optimizer proves 13 of the 16 instances, CP-SAT 11 and the remaining methods 10 or fewer (incremental SAT 10, repeated SAT 10, Gurobi 10, CPLEX MIP 10).
+
+\subsection{Large instances}
+On the four large instances only CP Optimizer proves an optimum: abz7 has makespan~656, shown after 1301.8\,s with 104\,MB of memory.
+This value is consistent with every other result (CP-SAT's interval $[651,665]$ contains it) and equals the value commonly reported for abz7 \verify{(656)}.
+Table~\ref{tab:main} and Figure~\ref{fig:large} give the intervals for all methods.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/large_bounds.pdf}
+  \caption{Proven $[\mathrm{LB},\mathrm{UB}]$ intervals on the large instances after 3600\,s. Repeated SAT was not run on this tier.}\label{fig:large}
+\end{figure}
+
+\begin{itemize}
+ \item \textbf{Upper bounds.} CP Optimizer has the best upper bound on all four instances (656, 678, 682 and 897 for abz7, abz8, abz9, yn1).
+ \item \textbf{Lower bounds.} CP Optimizer has the best lower bound on abz7 (656, optimal) and abz9 (656), incremental SAT on abz8 (626) and yn1 (850).
+ \item \textbf{MIP.} Gurobi's and CPLEX's lower bounds equal the initial bound on abz7--abz9, and both give wider intervals than every other method.
+ \item \textbf{Gaps.} Mean relative gap over unsolved runs: CP Optimizer 8.3\% (three runs), CP-SAT 11.7\%, incremental SAT 16.9\%, Gurobi 24.2\% and CPLEX 28.3\%.
+\end{itemize}
+Our best intervals for abz9 ($[656,682]$) and yn1 ($[850,897]$) contain the optima 678 and 884 that \citet{koshimura2010} report; for abz8 their lower bound (659) is above ours (626).
+Thus on these instances the SAT approach does not reach the published certification within one hour on one thread, but the SAT lower bounds remain the strongest on two of four instances.
+
+\subsection{Repeated versus incremental SAT}
+\input{tables/incremental_wrap.tex}
+Table~\ref{tab:inc} compares the four SAT search variants on the small instances.
+With descent, incremental SAT is 8--28 times faster than repeated SAT (ft10: 425.7 vs.\ 40.9\,s; la04: 88.4 vs.\ 3.1\,s); with bisection it is 1.5--5.1 times faster (ft10: 67.0 vs.\ 24.9\,s).
+On medium instances that both solve, bisection with assumptions is 1.5--3.0 times faster (la11: 91.0 vs.\ 40.6\,s; la16: 49.1 vs.\ 16.4\,s; abz6: 35.7 vs.\ 11.8\,s).
+Bisection needs only 3 to 9 SAT calls on the instances it solves, far fewer than descent (up to 145 calls on ft10).
+The advantage reverses on the harder medium instances: within 900\,s, repeated SAT reaches tighter bounds on la21 ($[1034,1053]$ vs.\ $[1014,1053]$) and orb01 ($[1052,1059]$ vs.\ $[1044,1074]$).
+We attribute this to the larger formula that incremental SAT builds at $H=\mathrm{UB}_0$, but we did not test this explanation.
+
+\subsection{Hybrid CP-SAT $+$ SAT}
+\input{tables/hybrid_wrap.tex}
+Table~\ref{tab:hybrid} shows that the hybrid has no consistent benefit.
+Both variants prove orb01 (852--854\,s), which incremental SAT alone cannot, but CP-SAT alone is faster (555.8\,s).
+On la21, abz7 and abz8 the hybrid intervals are no tighter than those of the better of its two components, and on yn1 the lower bound of Hybrid~C (842) is below that of incremental SAT (850).
+The 20\% warm-up reduces SAT time, and the bounds from a 3--12 minute CP-SAT run do not compensate for it on these instances.
+
+\subsection{Threats to validity}
+\begin{itemize}
+ \item \textbf{Single runs.} Each cell is run once; differences of a few percent or a few seconds are not meaningful, and we make no claim of statistical significance.
+ \item \textbf{One thread.} CP-SAT and the commercial solvers are designed for multi-threaded portfolios. With one worker, CP-SAT in particular may be understated. A multi-thread study is left for future work.
+ \item \textbf{One machine, fixed budgets.} All runs are on one laptop. Rows disturbed by the laptop going to sleep, or by a run that stopped early, were rerun, and the reported rows are the reruns.
+ \item \textbf{Instance set.} Sixteen non-trivial instances, mostly classical benchmarks that all solvers may have seen in tuning; yn2--yn4 and larger families are not covered.
+ \item \textbf{Explanations.} Statements about why a solver is stronger (weak big-M relaxation, formula size) are hypotheses, not tested conclusions.
+\end{itemize}
+
+%=====================================================================
+\section{Conclusion}\label{sec:concl}
+%=====================================================================
+We implemented the Crawford--Koshimura SAT encoding for the JSSP, added a boundary rule needed for sound decoding, and compared repeated and incremental SAT with CP-SAT, CP Optimizer, Gurobi and CPLEX MIP under a common single-thread protocol.
+Incremental SAT with assumptions is clearly faster than re-encoding when both finish, and SAT gives the best lower bounds on two of the four large instances.
+Overall, however, CP Optimizer was the strongest exact method in our runs, solving 13 of 16 instances and proving abz7 optimal, while the two MIP solvers were competitive only on small instances.
+Future work includes multi-thread runs, repeated runs for variance, the remaining Yamada--Nakano instances, and a tighter encoding (for example a smaller initial $H$ for incremental search).
+
+\section*{Data availability}
+Source code, benchmark scripts and raw results (\texttt{summary.csv}) are available at \todo{GitHub repository URL}.
+
+\section*{Declaration of generative AI use}
+\todo{State, as your course requires, whether and how AI tools were used.}
+
+%=====================================================================
+\appendix
+\section{Correctness of the assumption-based threshold}\label{app:a}
+%=====================================================================
+Let $F_H$ be the formula of Section~\ref{sec:enc} built for horizon $H$, and let $L\le H$ with $h_a+p_a+\tau_a\le L$ for all $a$.
+
+\begin{proposition}
+$F_H\wedge\mathcal A_L$ is satisfiable if and only if there is a schedule with makespan at most $L$.
+\end{proposition}
+
+\begin{proof}
+($\Leftarrow$) Given such a schedule $s$, set $\sa_{a,t}=[s_a\ge t]$, $\eb_{a,t}=[s_a+p_a\le t]$ and $\pr_{a,b}=[s_a+p_a\le s_b]$ (for each machine pair at least one of $\pr_{a,b},\pr_{b,a}$ holds because the operations do not overlap).
+All clauses of $F_H$ hold by the definitions, and $\mathcal A_L$ holds because $s_a+p_a\le L-\tau_a$.
+For R8, $\sa_{a,t}\wedge\pr_{a,b}$ gives $s_b\ge s_a+p_a\ge t+p_a$; R9 holds since $s_a\le L-p_a\le H-p_a$.
+
+($\Rightarrow$) Take a model and decode $s_a=\max\{t:\sa_{a,t}\}$, which exists by R3 and satisfies $s_a\ge h_a$.
+By R5 the true $\sa_{a,t}$ are exactly those with $t\le s_a$.
+\emph{Machine and job order.} For consecutive operations $a,b$ of a job, R1 gives $\pr_{a,b}$; for two operations on a machine, R2 gives $\pr_{a,b}$ or $\pr_{b,a}$.
+If $\pr_{a,b}$ holds, R8 at $t=s_a$ gives $\sa_{b,s_a+p_a}$, so $s_b\ge s_a+p_a$.
+(R8 is stated for $t\le H-p_a$, and $s_a\le H-p_a$ by R9.)
+This yields job precedence and non-overlap.
+\emph{Makespan.} By R7 at $t=s_a$, $\eb_{a,s_a+p_a-1}$ is false; by R6 (contrapositive) so is $\eb_{a,t}$ for all $t\le s_a+p_a-1$.
+Since $\mathcal A_L$ makes $\eb_{a,L-\tau_a}$ true, $L-\tau_a\ge s_a+p_a$, hence $s_a+p_a+\tau_a\le L$ and, for last operations, $s_a+p_a\le L$.
+\end{proof}
+
+Consequently every learned clause is a consequence of $F_H$ alone and stays valid for every later $L$.
+
+%=====================================================================
+\section{On the boundary rule R9}\label{app:b}
+%=====================================================================
+In our reading of the original index ranges, R7 and R8 are generated only for $0\le t\le L-p_a$, so no clause forbids $\sa_{a,t}$ for $t>L-p_a$.
+For the last operation of a job there is no successor through which a later start could be propagated and rejected, so a satisfying assignment can place it too late; decoding then yields a makespan above $L$.
+Our test suite contains a $2\times2$ instance with optimum~7 for which R1--R8 alone are satisfiable at $L=6$ and the decoded schedule has makespan~7; with R9 the formula is unsatisfiable, as it should be.
+We stress that this concerns our reading of the original formulation; the original may assume a different convention.
+
+\bibliographystyle{cas-model2-names}
+\bibliography{refs}
+
+\end{document}

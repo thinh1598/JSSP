@@ -1,9 +1,12 @@
-"""Chay BASELINE (hien co: CP-SAT cua OR-Tools) va ghi vao cung results/raw/summary.csv voi cac cach SAT.
+"""Chay BASELINE (CP-SAT cua OR-Tools, Gurobi MIP, CPLEX CP Optimizer, CPLEX MIP) va ghi vao cung results/raw/summary.csv voi cac cach SAT.
 
 Vi du (chay tu thu muc goc repo, da cai:  pip install ortools):
     python scripts/run_baseline.py ft06 la01
     python scripts/run_baseline.py ft10 la02 la03 la04 --time-limit 600
     python scripts/run_baseline.py ft10 --workers 8          # thi nghiem them: CP-SAT nhieu luong
+    python scripts/run_baseline.py ft06 la01 --model gurobi  # Gurobi MIP (can gurobipy + giay phep)
+    python scripts/run_baseline.py ft06 la01 --model cpo     # CPLEX CP Optimizer (can Studio + docplex)
+    python scripts/run_baseline.py ft06 la01 --model cplex   # CPLEX MIP (can Studio, goi cplex.exe)
 """
 import argparse
 import sys
@@ -12,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from jssp.baselines import run_cpsat  # noqa: E402
+from jssp.baselines import LICENSE_STATUSES, run_cplex, run_cpo, run_cpsat, run_gurobi  # noqa: E402
 from jssp.runner import CsvLog  # noqa: E402
 from jssp.search_multi import SUMMARY_FIELDS, resolve_instance  # noqa: E402
 
@@ -20,9 +23,9 @@ from jssp.search_multi import SUMMARY_FIELDS, resolve_instance  # noqa: E402
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("instances", nargs="+", help="ten bai (ft06, la01, ...) hoac duong dan file")
-    ap.add_argument("--model", choices=["cpsat"], default="cpsat")
+    ap.add_argument("--model", choices=["cpsat", "gurobi", "cpo", "cplex"], default="cpsat")
     ap.add_argument("--time-limit", type=float, default=600, help="giay cho moi bai")
-    ap.add_argument("--workers", type=int, default=1, help="mac dinh 1 = cong bang voi CaDiCaL don luong")
+    ap.add_argument("--workers", type=int, default=1, help="so luong cua solver (CP-SAT workers / Gurobi threads); mac dinh 1 = cong bang voi CaDiCaL")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--mem-limit-mb", type=float, default=None)
     ap.add_argument("--out", default=str(ROOT / "results" / "raw"))
@@ -33,9 +36,13 @@ def main() -> int:
     rows = []
     for name in args.instances:
         path = resolve_instance(name)
-        print(f"\n=== {path.stem} | cpsat (workers={args.workers}, gioi han {args.time_limit:.0f}s) ===")
-        rows.append(run_cpsat(path, args.time_limit, args.workers, args.seed, args.mem_limit_mb, summary_log,
-                              ROOT / "results" / "schedules"))
+        print(f"\n=== {path.stem} | {args.model} (luong={args.workers}, gioi han {args.time_limit:.0f}s) ===")
+        run = {"cpsat": run_cpsat, "gurobi": run_gurobi, "cpo": run_cpo, "cplex": run_cplex}[args.model]
+        r = run(path, args.time_limit, args.workers, args.seed, args.mem_limit_mb, summary_log,
+                ROOT / "results" / "schedules")
+        rows.append(r)
+        if r.status in LICENSE_STATUSES:             # loi giay phep / thu vien: dung som, khong lap lai cho bai khac
+            return 2
 
     print("\n" + "=" * 70)
     print(f"{'bai':8s} {'ket qua':12s} {'LB':>6s} {'UB':>6s} {'giay':>9s}")
