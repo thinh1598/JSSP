@@ -6,10 +6,14 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{url}
+\usepackage{capt-of}
 
 % ---- markers for things that must be filled in / double-checked before submission ----
 \newcommand{\todo}[1]{{\color{red}[TODO: #1]}}
 \newcommand{\verify}[1]{{\color{red}#1}\footnote{\color{red}To be verified against the literature before submission.}}
+
+% figure placed exactly where written (not a float), independent of the class's float handling
+\newcommand{\inlinefig}[3]{\begin{center}\includegraphics[width=#1]{#2}\par\captionof{figure}{#3}\end{center}}
 
 \newtheorem{proposition}{Proposition}
 \newtheorem{lemma}{Lemma}
@@ -22,16 +26,15 @@
 \begin{document}
 
 \shorttitle{SAT Encoding for the Job-Shop Scheduling Problem}
-\shortauthors{Author One et~al.}
-
+\shortauthors{Hoang and Thinh }
 \title[mode=title]{Exact SAT Solving for the Job-Shop Scheduling Problem: Incremental Search and a Comparison with CP and MIP Solvers}
 
-\author[1]{Author One}
-\author[1]{Author Two}
-\author[1]{Author Three}
+\author[1]{Do Viet Hoang}
 \cormark[1]
+\ead{24021483@vnu.edu.vn}
+\author[1]{Nguyen Phuc Thinh}
 \cortext[cor1]{Corresponding author}
-\address[1]{Faculty of Information Technology, VNU University of Engineering and Technology, Hanoi, Vietnam \todo{authors, e-mails, ORCID}}
+\address[1]{Faculty of Information Technology, VNU University of Engineering and Technology, Hanoi, Vietnam}
 
 \begin{abstract}
 The job-shop scheduling problem (JSSP) asks for a schedule of minimum makespan in which every job visits its machines in a prescribed order and every machine processes one operation at a time.
@@ -184,7 +187,7 @@ MIP gaps are set to zero, and a MIP bound is rounded up to an integer with toler
 Random seeds are fixed to~0.
 Each cell is run \emph{once}.
 SAT runs use CaDiCaL 1.5.3 (\texttt{cadical153}) in PySAT; the other solvers are OR-Tools CP-SAT, IBM CP Optimizer and CPLEX MIP from CPLEX Studio 22.2.0 (CP Optimizer through \texttt{docplex.cp}, CPLEX MIP through its interactive optimizer on an LP file), and Gurobi 14.0.0 with an academic license.
-Hardware and library versions: \todo{CPU model, RAM, OS (Windows laptop), Python, PySAT and OR-Tools versions; memory limit used}.
+All experiments ran on a single Windows~11 laptop with a 12th Gen Intel Core i5-1240P processor and 7.7\,GB of RAM, using Python~3.13.11, PySAT~1.9.dev17 and OR-Tools~9.15.6755. Each run was stopped if its process tree exceeded 70\% of the physical memory (about 5.4\,GB); no run reached this limit.
 
 \paragraph{Reporting.}
 For each run we report either the time to a proven optimum or the proven interval $[\mathrm{LB},\mathrm{UB}]$ at the time limit.
@@ -207,34 +210,22 @@ On the unsolved medium runs the mean gap is 3.4\% (incremental SAT), 1.3\% (repe
 The large MIP gaps come from lower bounds that stay at the initial bound (935 on la21 for both MIP solvers), whereas SAT and CP-SAT reach 1014--1034.
 A plausible, untested explanation is the weak linear relaxation of the big-M constraints.
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/times_small_medium.pdf}
-  \caption{Time to optimality on small and medium instances (log scale); a cross marks a run that reached the time limit.}\label{fig:times}
-\end{figure}
+\inlinefig{\textwidth}{figures/times_small_medium.pdf}{Time to optimality on small and medium instances (log scale); a cross marks a run that reached the time limit.\label{fig:times}}
 
 \input{tables/summary_wrap.tex}
 
 Memory differs by family (Table~\ref{tab:summary}): the MIP solvers average 42--58\,MB, CP solvers 91--98\,MB and SAT 162--553\,MB on the small and medium tiers, rising to about 1.5\,GB for SAT on the large tier.
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.75\textwidth]{figures/cactus.pdf}
-  \caption{Cactus plot: instances proven optimal (small, medium and large tiers together) against time.}\label{fig:cactus}
-\end{figure}
+\inlinefig{0.75\textwidth}{figures/cactus.pdf}{Cactus plot: instances proven optimal (small, medium and large tiers together) against time.\label{fig:cactus}}
 
 Figure~\ref{fig:cactus} summarizes the three tiers: CP Optimizer proves 13 of the 16 instances, CP-SAT 11 and the remaining methods 10 or fewer (incremental SAT 10, repeated SAT 10, Gurobi 10, CPLEX MIP 10).
 
 \subsection{Large instances}
 On the four large instances only CP Optimizer proves an optimum: abz7 has makespan~656, shown after 1301.8\,s with 104\,MB of memory.
-This value is consistent with every other result (CP-SAT's interval $[651,665]$ contains it) and equals the value commonly reported for abz7 \verify{(656)}.
+This value is consistent with every other result (CP-SAT's interval $[651,665]$ contains it) and equals the optimum listed for abz7 in the JSPLIB benchmark collection \citep{jsplib}.
 Table~\ref{tab:main} and Figure~\ref{fig:large} give the intervals for all methods.
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/large_bounds.pdf}
-  \caption{Proven $[\mathrm{LB},\mathrm{UB}]$ intervals on the large instances after 3600\,s. Repeated SAT was not run on this tier.}\label{fig:large}
-\end{figure}
+\inlinefig{\textwidth}{figures/large_bounds.pdf}{Proven $[\mathrm{LB},\mathrm{UB}]$ intervals on the large instances after 3600\,s. Repeated SAT was not run on this tier.\label{fig:large}}
 
 \begin{itemize}
  \item \textbf{Upper bounds.} CP Optimizer has the best upper bound on all four instances (656, 678, 682 and 897 for abz7, abz8, abz9, yn1).
@@ -268,6 +259,7 @@ The 20\% warm-up reduces SAT time, and the bounds from a 3--12 minute CP-SAT run
  \item \textbf{One machine, fixed budgets.} All runs are on one laptop. Rows disturbed by the laptop going to sleep, or by a run that stopped early, were rerun, and the reported rows are the reruns.
  \item \textbf{Instance set.} Sixteen non-trivial instances, mostly classical benchmarks that all solvers may have seen in tuning; yn2--yn4 and larger families are not covered.
  \item \textbf{Explanations.} Statements about why a solver is stronger (weak big-M relaxation, formula size) are hypotheses, not tested conclusions.
+ \item \textbf{Laptop hardware.} The processor can change its clock speed with temperature and power state, so timings of different runs may vary slightly even for identical work.
 \end{itemize}
 
 %=====================================================================
@@ -279,10 +271,10 @@ Overall, however, CP Optimizer was the strongest exact method in our runs, solvi
 Future work includes multi-thread runs, repeated runs for variance, the remaining Yamada--Nakano instances, and a tighter encoding (for example a smaller initial $H$ for incremental search).
 
 \section*{Data availability}
-Source code, benchmark scripts and raw results (\texttt{summary.csv}) are available at \todo{GitHub repository URL}.
+Source code, benchmark scripts and raw results (\texttt{summary.csv}) are available at \url{https://github.com/thinh1598/JSSP}.
 
 \section*{Declaration of generative AI use}
-\todo{State, as your course requires, whether and how AI tools were used.}
+During the preparation of this work the authors used Claude (Anthropic) to help implement and test the code, to analyse the experimental results and to draft and edit the manuscript. After using this tool, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
 
 %=====================================================================
 \appendix
